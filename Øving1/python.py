@@ -30,4 +30,4 @@ def main():
 
 main()
 
-#Gir forskjellige svar ulike null fordi e
+#Gir forskjellige svar ulike null fordi threadene kjøres samtidig (tokjernet) (?)
