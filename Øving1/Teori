@@ -1,0 +1,36 @@
+What is concurrency? What is parallelism? What's the difference?
+Concurrency: Flere oppgaver jobber samtidig. Parallelism: Hver oppgave deles inn i deloppgaver som jobber parallelt. 
+Concurrency omhandler hvordan flere oppgaver behandles, mens parallelism omhandler hvordan hver enkelt oppgave behandles.
+
+Why have machines become increasingly multicore in the past decade?
+Det gjør maskinen bedre til å multitaske; kjøre flere instruksjoner samtidig.
+
+What kinds of problems motivates the need for concurrent execution? (Or phrased differently: What problems do concurrency help in solving?)
+
+Does creating concurrent programs make the programmer's life easier? Harder? Maybe both? (Come back to this after you have worked on part 4 of this exercise)
+Deling av ressurser (variabler) i flere tråder kan føre til problemer (deadlock). F.eks. kan linje 5 utføres før 3, slik at hele prosessen stopper.
+En tråd per oppgave gjør koden likevel mer oversiktelig og enklere.
+https://en.wikipedia.org/wiki/Concurrent_computing#Coordinating_access_to_shared_resources
+
+What are the differences between processes, threads, green threads, and coroutines?
+processes: Ett minneområde pr. prosess. En prosess kan bestå av flere tråder.
+
+threads: Delt minneområde mellom trådene. Er en enhet innenfor en prosess.
+
+green threads: I motsetning til en vanlig thread (som kjøres i OS) kjøres de i en virtual machine. Tråden er scheduled av VM'en.
+
+coroutines: Coroutines er "collaborative". I multi-kjerne systemer, kjøres kun en coroutine av gangen
+(men flere tråder kan kjøres i parallell). 
+
+Which one of these do pthread_create() (C/POSIX), threading.Thread() (Python), go (Go) create?
+pthread_create lager tråder, threading.Thread lager tråder (med GIL (Python)) og go lager green threads.
+
+How does pythons Global Interpreter Lock (GIL) influence the way a python Thread behaves?
+Flere tråder kan ikke kjøres samtidig. 
+
+With this in mind: What is the workaround for the GIL (Hint: it's another module)?
+En workaround er multiprocessing. Det er et bibliotek som setter opp et lokalt distribusjonssytem. 
+Ressursene deles med pipelining eller andre metoder.
+
+What does func GOMAXPROCS(n int) int change?
+Den endrer maksantallet prosessorer som Go bruker.
