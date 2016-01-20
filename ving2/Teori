@@ -1,0 +1,27 @@
+- An atomic operation?
+Operasjon hvor prosessoren samtidig leser en lokasjon og skriver i samme bussoperasjon.(?)
+
+- A semaphore?
+En semafor er en synkroniseringsmetode for å begrense tilgangen til en delt ressurs eller prosess for flere samtidig pågående prosesser.
+Semaphore is signaling mechanism (“I am done, you can carry on” kind of signal). 
+For example, if you are listening songs (assume it as one task) on your mobile and at the same time
+your friend calls you, an interrupt is triggered upon which an interrupt service routine (ISR) signals the call processing task to wakeup.
+
+- A mutex?
+En mutex signaliserer når critical sections av koden trenger tilgang, og forhindrer andre tråder fra å utføres samtidig og få tilgang til
+de samme minnelokasjonene.
+Strictly speaking, a mutex is locking mechanism used to synchronize access to a resource. 
+Only one task (can be a thread or process based on OS abstraction) can acquire the mutex. 
+It means there is ownership associated with mutex, and only the owner can release the lock (mutex).
+
+- A critical section?
+Critical section er en del av et flerprosessprogram som ikke kan bli utført samtidig av mer enn en av programmets prosesser. Dette gjelder 
+bla. for nettverksforbindelser.
+
+-------------------------------------------------
+
+Semaforer har en synkronisert teller, mens mutex er kun binær (true / false).
+
+
+
+
