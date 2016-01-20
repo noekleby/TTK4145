@@ -1,5 +1,6 @@
 - An atomic operation?
-Operasjon hvor prosessoren samtidig leser en lokasjon og skriver i samme bussoperasjon.(?)
+Operasjon hvor prosessoren kan lese og skrive i samme bussoperasjon.(?)
+Når tråden utfører operasjonen så ser det ut for de andre trådene som om operasjonen skjer momentant.
 
 - A semaphore?
 En semafor er en synkroniseringsmetode for å begrense tilgangen til en delt ressurs eller prosess for flere samtidig pågående prosesser.
