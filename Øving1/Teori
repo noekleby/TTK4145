@@ -23,7 +23,7 @@ coroutines: Coroutines er "collaborative". I multi-kjerne systemer, kjøres kun 
 (men flere tråder kan kjøres i parallell). 
 
 Which one of these do pthread_create() (C/POSIX), threading.Thread() (Python), go (Go) create?
-pthread_create lager tråder, threading.Thread lager tråder (med GIL (Python)) og go lager green threads.
+pthread_create lager tråder, threading.Thread lager tråder (med GIL (Python)) og go lager coroutines.
 
 How does pythons Global Interpreter Lock (GIL) influence the way a python Thread behaves?
 Flere tråder kan ikke kjøres samtidig. 
