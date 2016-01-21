@@ -39,28 +39,56 @@ Den endrer maksantallet prosessorer som Go bruker.
 
 Problem 3
 
-- Concurrency  is when two or more tasks can start, run, and complete in overlapping time periods. It doesn't necessarily mean they'll ever both be running at the same instant. Eg. multitasking on a single-core machine.
-Parallelism is when tasks literally run at the same time, eg. on a multicore processor.
+- Concurrency  is when two or more tasks can start, run, and complete in overlapping time periods. It doesn't necessarily
+mean they'll ever both be running at the same instant. Eg. multitasking on a single-core machine.Parallelism is when tasks 
+literally run at the same time, eg. on a multicore processor.
 
 - due to the physical constraints preventing frequency scaling and power consumption (heat generation). 
 
-- The computations may be executing on multiple cores in the same chip, preemptively time-shared threads on the same processor, or executed on physically separated processors.
+- The computations may be executing on multiple cores in the same chip, preemptively time-shared threads on the same processor, 
+or executed on physically separated processors.
 
 - It always depends on how you feel about it. But overall it can make it easier if it is necessary. 
 
-- Process:  OS-managed, each one has its own virtual address space, can be interrupted by the system to run an other process, can run parallel to other processes on other processors, the memory overhead of processes is high, the time overhead for creating and context switching between processes is relatively high
-- Threads: OS-managed, Each is "contained" within some particular process, all threads in the same process share the same virtual address space, can be interrupted by the system to allow another thread to run, can run in parallel with other threads on different processors, the memory and time overheads associated with threads are smaller than processes, but still non-trivial.
-- Green threads: Not OS-managed, user-space projections of the same concept as threads, probably not truly concurrent, except in the sense that there may be multiple worker threads or processes giving them CPU time concurrently, so probably best to consider this as interleaved or multiplexed.
-- Coroutines: not OS-managed, Exactly threads, except co-operatively multitasking, and hence not truly concurrent.
+- Process:  OS-managed, each one has its own virtual address space, can be interrupted by the system to run an other process,
+ can run parallel to other processes on other processors,
+ the memory overhead of processes is high,
+ the time overhead for creating and context switching between processes is relatively high
+- Threads: OS-managed, 
+  Each is "contained" within some particular process,
+  all threads in the same process share the same virtual address space, 
+  can be interrupted by the system to allow another thread to run
+  can run in parallel with other threads on different processors
+  the memory and time overheads associated with threads are smaller than processes
+  but still non-trivial.
+- Green threads: Not OS-managed
+  user-space projections of the same concept as threads
+  probably not truly concurrent
+  except in the sense that there may be multiple worker threads or processes giving them CPU time concurrently
+  so probably best to consider this as interleaved or multiplexed.
+- Coroutines: not OS-managed
+ Exactly threads
+ except co-operatively multitasking
+ and hence not truly concurrent.
 
 - C/POSIX: threads 
 - GO: coroutines
 - Python: threads 
 
-- The Python interpreter is not fully thread safe. In order to support multi-threaded Python programs, there's a global lock that must be held by the current thread before it can safely access Python objects. Without the lock, even the simplest operations could cause problems in a multi-threaded program: for example, when two threads simultaneously increment the reference count of the same object, the reference count could end up being incremented only once instead of twice.
- Therefore, the rule exists that only the thread that has acquired the global interpreter lock may operate on Python objects or call Python/C API functions. In order to support multi-threaded Python programs, the interpreter regularly releases and reacquires the lock -- by default, every 100 byte code instructions (this can be changed with sys.setcheckinterval()). The lock is also released and reacquired around potentially blocking I/O operations like reading or writing a file, so that other threads can run while the thread that requests the I/O is waiting for the I/O operation to complete.
+- The Python interpreter is not fully thread safe. In order to support multi-threaded Python programs,
+  there's a global lock that must be held by the current thread before it can safely access Python objects. 
+  Without the lock, even the simplest operations could cause problems in a multi-threaded program: for example,
+  when two threads simultaneously increment the reference count of the same object,
+  the reference count could end up being incremented only once instead of twice.
+  Therefore, the rule exists that only the thread that has acquired the global interpreter lock may operate on
+  Python objects or call Python/C API functions. In order to support multi-threaded Python programs
+  the interpreter regularly releases and reacquires the lock -- by default
+  every 100 byte code instructions (this can be changed with sys.setcheckinterval()).
+  The lock is also released and reacquired around potentially blocking I/O operations like reading or writing a file
+  so that other threads can run while the thread that requests the I/O is waiting for the I/O operation to complete.
 
-- The func GOMAXPROCS(n int) int  variable limits the number of operating system threads that can execute user-level Go code simultaneously
+- The func GOMAXPROCS(n int) int  variable limits the number of operating system threads that can execute user-level Go code 
+ simultaneously
 
 
 
