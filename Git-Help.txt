@@ -1,0 +1,15 @@
+
+Clone repository
+
+- In the terminal: change the current working directory to the location you want the cloned directory to 	be made. 
+- Type «git clone» and «https://github.com/YOUR-USERNAME/YOUR-REPOSITORY» or just 	print the URL. Press «Enter»
+
+Commit and push back to github
+- Type «git commit -m «melding»»
+- Type «git push»
+
+Rename
+- Type: «git mv <old name> <new name>»cd
+Add directory and file
+- Add the directory and file on local computer (directory can not be empty). 
+- type «git add directory/file.txt»or «git add file.txt»
