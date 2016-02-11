@@ -11,6 +11,13 @@ const(
 //floor light
 //button lights
 
+var button_channel_matrix = [N_FLOORS][N_BUTTONS]int{
+	{BUTTON_UP1, BUTTON_DOWN1, BUTTON_COMMAND1},
+	{BUTTON_UP2, BUTTON_DOWN2, BUTTON_COMMAND2},
+	{BUTTON_UP3, BUTTON_DOWN3, BUTTON_COMMAND3},
+	{BUTTON_UP4, BUTTON_DOWN4, BUTTON_COMMAND4},
+}
+
 func elev_init() {
 	init_success := c.io_init()
 	for (f := 0; f < N_FLOORS; f++){
@@ -48,9 +55,7 @@ func elev_set_button_lamp(floor, button int){
 		if floor == 2 {
 			io_set_bit(LIGHT_UP3)
 		}
-
 	}
-
 	if button == DOWN {
 		if floor == 1 {
 			io_set_bit(LIGHT_DOWN2)
@@ -63,7 +68,6 @@ func elev_set_button_lamp(floor, button int){
 		}
 		
 	}
-
 	if button == COMMAND {
 		if floor == 0 {
 			io_set_bit(COMMAND1)
@@ -111,12 +115,15 @@ func elev_set_stop_lamp(stop int) {
 	}
 }
 
-func elev_get_button_signal(button, floor int){
-	if  {
-		io_set_bit(LIGHT_STOP)
-	} else{
-		io_clear_bit(LIGHT_STOP)
+func elev_get_button_signal(button, floor int) int{
+	if io_read_bit(button_channel_matrix[floor][button]) {
+		return 1
+	} else {
+		return 0
 	}
+}
+func Get_button_signal(button int, floor int) int {
+	
 }
 
 func elev_get_stop_signal() int {
