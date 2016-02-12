@@ -1,35 +1,6 @@
 package Driver
 
 import(
-) 
-
-const( 
-	MOTOR_SPEED = 2800
- 	N_FLOORS = 3
- 	)
-
-//floor light
-//button lights
-
-var button_channel_matrix = [N_FLOORS][N_BUTTONS]int{
-	{BUTTON_UP1, BUTTON_DOWN1, BUTTON_COMMAND1},
-	{BUTTON_UP2, BUTTON_DOWN2, BUTTON_COMMAND2},
-	{BUTTON_UP3, BUTTON_DOWN3, BUTTON_COMMAND3},
-	{BUTTON_UP4, BUTTON_DOWN4, BUTTON_COMMAND4},
-}
-
-func elev_init() {
-	init_success := c.io_init()
-	for (f := 0; f < N_FLOORS; f++){
-		for (elev_button_type)
-	}	
-	// Set every set function to zero
-	// Check initialization of hardware
-}
-
-package Driver
-
-import(
 	"fmt"
 ) 
 
