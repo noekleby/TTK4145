@@ -1,5 +1,5 @@
 
-package Driver
+package driver
 
 import "C"
 
