@@ -44,7 +44,7 @@ func elev_init(){
 }
 
 
-func elev_set_motor_direction(direction int) {
+func elevSetMotorDirection(direction int) {
 	if (direction == 0){
         	io_write_analog(MOTOR, 0)
     	}
@@ -58,7 +58,7 @@ func elev_set_motor_direction(direction int) {
     	}
 }
 
-func elev_set_button_lamp(floor int, button int, value bool){
+func elevSetButtonLamp(floor int, button int, value bool){
 	// floor can be any N_FLOOR
 	// button indicates UP (= 1), DOWN (=-1) or COMMAND (=0)
 	// value sets the light on/off
@@ -74,7 +74,7 @@ func elev_set_button_lamp(floor int, button int, value bool){
 	}
 }
 
-func elev_set_floor_indicator(floor int) {
+func elevSetFloorIndicator(floor int) {
 	if (floor & 0x02) != 0 { // handles the odd numbered floors
 		Io_set_bit(LIGHT_FLOOR_IND1)
 	} else {
@@ -88,7 +88,7 @@ func elev_set_floor_indicator(floor int) {
 	}
 }
 
-func elev_set_door_open_lamp(door int) {
+func elevSetDoorOpenLamp(door int) {
 	if door == 1 {
 		io_set_bit(LIGHT_DOOR_OPEN)
 	} else{
@@ -96,7 +96,7 @@ func elev_set_door_open_lamp(door int) {
 	}
 }
 
-func elev_set_stop_lamp(stop int) {
+func elevSetStopLamp(stop int) {
 	if stop == 1 {
 		io_set_bit(LIGHT_STOP)
 	} else{
@@ -104,7 +104,7 @@ func elev_set_stop_lamp(stop int) {
 	}
 }
 
-func elev_get_button_signal(button int, floor int) int {
+func elevGetButtonSignal(button int, floor int) int {
 	if ((N_FLOORS > floor >= 0) && N_BUTTONS > button >= 0){ // checks if floor and button are valid
     		if (io_read_bit(button_channel_matrix[floor][button])) { // what's the purpose of read_bit(?)
         		return 1
@@ -116,9 +116,9 @@ func elev_get_button_signal(button int, floor int) int {
 	}
 }
 
-func elev_get_stop_signal() int {
+func elevGetStopSignal() int {
 	return(io_read_bit(STOP))
 }
-func elev_get_obstruction_signal() int {
+func elevGetObstructionSignal() int {
 	return (io_read_bit(OBSTRUCTION))
 }
