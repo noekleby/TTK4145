@@ -32,6 +32,7 @@ var button=[N_floors][N_buttons]int{
 
 var Sensors = [N_floors]int{SENSOR_FLOOR1,SENSOR_FLOOR2,SENSOR_FLOOR3,SENSOR_FLOOR4}
 
+//Check initialization of hardware, drive down to IDLE, clear all lights except floor indicator. 
 func elev_init(){
 	init_success := c.io_init()
 	
@@ -47,24 +48,34 @@ func elev_init(){
 	}
 	Set_stop_lamp(0)
 	Set_door_open_lamp(0)
+
+	//Finne ut hvor vi er, dersom vi ikke er i 1. etasje skal heisen forflytte seg ned dit. 
+	// Så må vi sette på etasjeindikatoren. 
 	Set_floor_indicator(0)
-	// Set every set function to zero
-	// Check initialization of hardware
+	floor = elevGetFloorSignal()
+	if (floor =! 0){
+		elevSetMotorDirection(-1)
+	}
+	for Elev_get_floor_sensor_signal() == -1 {}
+  	Elev_set_motor_direction(DIR_STOP)
+  	Elev_set_floor_indicator(Elev_get_floor_sensor_signal())
+
+    return 1
 }
 
 
 func elevSetMotorDirection(direction int) {
 	if (direction == 0){
-        	io_write_analog(MOTOR, 0)
-    	}
-    	if (direction > 0) {
-        	io_clear_bit(MOTORDIR)
-        	io_write_analog(MOTOR, MOTOR_SPEED)
-    	}
-    	if (direction < 0) {
-        	io_set_bit(MOTORDIR)
-        	io_write_analog(MOTOR, MOTOR_SPEED)
-    	}
+        io_write_analog(MOTOR, 0)
+    }
+    if (direction > 0) {
+        io_clear_bit(MOTORDIR)
+        io_write_analog(MOTOR, MOTOR_SPEED)
+    }
+    if (direction < 0) {
+        io_set_bit(MOTORDIR)
+        io_write_analog(MOTOR, MOTOR_SPEED)
+    }
 }
 
 func elevSetButtonLamp(floor int, button int, value bool){
@@ -138,5 +149,4 @@ func elevGetFloorSignal() {
 		}
 	}
 	return -1
-	
 }
