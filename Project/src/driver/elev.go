@@ -6,8 +6,8 @@ import(
 
 const( 
 	MOTOR_SPEED = 2800
- 	N_FLOORS = 3
-	N_BUTTONS = 2 // needs to be N_FLOORS-1 for the init function
+ 	N_FLOORS = 4
+	N_BUTTONS = 3 // needs to be N_FLOORS-1 for the init function
  	)
 
 var button_channel_matrix = [N_FLOORS][N_BUTTONS]int{ //button command for 4 floors
@@ -22,6 +22,15 @@ var lamp_channel_matrix = [N_FLOORS][N_BUTTONS]int{ //floor lights for 4 floors
 	{LIGHT_UP3, LIGHT_DOWN3, LIGHT_COMMAND3},
 	{LIGHT_UP4, LIGHT_DOWN4, LIGHT_COMMAND4},
 }
+
+var button=[N_floors][N_buttons]int{
+	{0,0,0},
+	{0,0,0},
+	{0,0,0},
+	{0,0,0},
+}
+
+var Sensors = [N_floors]int{SENSOR_FLOOR1,SENSOR_FLOOR2,SENSOR_FLOOR3,SENSOR_FLOOR4}
 
 func elev_init(){
 	init_success := c.io_init()
@@ -121,4 +130,13 @@ func elevGetStopSignal() int {
 }
 func elevGetObstructionSignal() int {
 	return (io_read_bit(OBSTRUCTION))
+}
+func elevGetFloorSignal() {
+	for (f := 0; f <= N_FLOORS; f++){
+		if io_read_bit(Sensors[f]) == 1 {
+			return f
+		}
+	}
+	return -1
+	
 }
