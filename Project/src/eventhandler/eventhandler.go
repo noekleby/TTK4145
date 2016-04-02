@@ -17,9 +17,9 @@ type MSG struct{
 	State 			int
 	PrevFloor 		int
 	Dir   			int 	//never 0. 
-	ExUpOrders 		[N_FLOORS]int
+	ExUpOrders 		[N_FLOORS]int //External orders
 	ExDownOrders	[N_FLOORS]int
-	InOrders		[N_FLOORS]int
+	InOrders		[N_FLOORS]int //internal orders
 }
 
 type Order struct{
@@ -45,7 +45,7 @@ func InternalOrderDetector(orderChan chan Order) {
 			for button:=0; button < N_FLOORS; button++ {
 				currSignalMatrix[button][floor] = elevGetButtonSignal(button,floor) //fra driveren elev.go
 				if (currSignalMatrix[button][floor] == 1 && prevSignalMatrix[button][floor] == 0) { //Hvis get button er 1 og det ikke finnes ordre for etasjen fra før, legges det inn en ny ordre
-					orderChan <- Order{floor, button}
+					orderChan <- Order{floor, button} //Sender Order på kanalen
 				}
 				prevSignalMatrix[button][floor] = currSignalMatrix[button][floor]
 			}
@@ -58,8 +58,8 @@ func InternalOrderDetector(orderChan chan Order) {
 func floorReached(floorReachedChan chan int) {
 	var prevFloor = elevGetFloorSignal() //Trenger en getfloorsignal-funksjon i driveren (som er elev.go midlertidig)
 	for {
-		if (elevGetFloorSignal() != -1 && prevFloor == -1) {
-			floorReachedChan <- elevGetFloorSignal()
+		if (elevGetFloorSignal() != -1 && prevFloor == -1) { //-1 er idle
+			floorReachedChan <- elevGetFloorSignal() //Legger hvilke etasje man er i inn i floor reached-kanalen
 		}
 		prevFloor = elevGetFloorSignal()
 		time.Sleep(10*time.Millisecond)
@@ -104,8 +104,8 @@ func ExternalOrdersUpdate(otherLift MSG){ //går gjennom panelene på utsiden av
 
 
 func EventHandler(timerChan chan string, timeOutChan chan int, send_ch, receive_ch chan Udp_message) {
-	orderChannel := make(chan Order)
-	floorReachedChannel := make(chan int)
+	orderChan := make(chan Order) // lager channels
+	floorReachedChan := make(chan int)
 	go InternalOrderDetector(orderChan)
 	go floorReached(floorReachedChan)
 	
@@ -114,28 +114,25 @@ func EventHandler(timerChan chan string, timeOutChan chan int, send_ch, receive_
 		
 		select {
 
-		case UDP_Rec := <- receive_ch:
+		case UDP_Rec := <- receive_ch: //mottas og legges i UDP_Rec ; Mottar her en ny ordre 
 
 			fmt.Println("HEIHEIHEHEHI", Laddr.String()) 
 
-			if (Laddr.String() != UDP_Rec.Raddr) { //Hva skjer her da?
+			if (Laddr.String() != UDP_Rec.Raddr) { // Sjekker om den nye ordren er forskjellig fra hva man har fra før
 				fmt.Println("beat2")
 				fmt.Println(UDP_Rec.Raddr)
 				Dec_Msg := DecodeMsg(UDP_Rec.Data, UDP_Rec.Length)
 
-				UpDateOrders(Dec_Msg)
+				UpDateOrders(Dec_Msg) // Oppdaterer ordrene
 				fmt.Println(Dec_Msg)
 			}
 
-		case order := <- orderEventChannel:
+		case order := <- orderEventChannel: //mottas og legges i order
 			AddOrder(order)
 			PrintMsg()
-
-
-
 			
 			Udp_msg.Data = EncodeMsg(Msg)
-			send_ch <- Udp_msg
+			send_ch <- Udp_msg //Sender udp_msg
 
 			if (EmptyQueue()) {
 				fmt.Println("NewOrderInEmptyQueue")
@@ -147,7 +144,7 @@ func EventHandler(timerChan chan string, timeOutChan chan int, send_ch, receive_
 				fmt.Println("Event : NewOrderInCurrentFloor")
 			}
 
-		case floor := <- floorReachedEventChannel:
+		case floor := <- floorReachedEventChannel: //mottas og legges i floor ; Skjer hvis man har kommet til riktig etasje
 			Msg.PrevFloor = floor
 			fmt.Println("Event : New floor reached :", floor)
 			stopped := false
@@ -159,8 +156,8 @@ func EventHandler(timerChan chan string, timeOutChan chan int, send_ch, receive_
 				Msg.MsgType = NOTHING
 			}
 
-		case <- timerChan: 
-			TimerOut()
+		case <- timerChan: // Resetter timerChan (definert i timer.go) / tømmer timerchan
+			TimerOut()  // gir "time out" hvis man er for lenge i en state
 		}
 	}
 }
