@@ -46,20 +46,18 @@ func elev_init(){
 	else{
 		fmt.println("Unable to initialize elevator hardware!")
 	}
+	
 	Set_stop_lamp(0)
 	Set_door_open_lamp(0)
 
 	//Finne ut hvor vi er, dersom vi ikke er i 1. etasje skal heisen forflytte seg ned dit. 
 	// Så må vi sette på etasjeindikatoren. 
-	Set_floor_indicator(0)
-	floor = elevGetFloorSignal()
-	if (floor =! 0){
+	
+	for (elevGetFloorSignal() =! 0){
 		elevSetMotorDirection(-1)
 	}
-	for Elev_get_floor_sensor_signal() == -1 {}
-  	Elev_set_motor_direction(DIR_STOP)
+  	Elev_set_motor_direction(0)
   	Elev_set_floor_indicator(Elev_get_floor_sensor_signal())
-
     return 1
 }
 
