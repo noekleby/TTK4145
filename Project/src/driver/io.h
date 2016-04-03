@@ -1,13 +1,13 @@
 #pragma once
 
 // Returns 0 on init failure
-int ioInit(void);
+int io_init(void);
 
-void ioSetBit(int channel);
-void ioClearBit(int channel);
+void io_set_bit(int channel);
+void io_clear_bit(int channel);
 
-int ioReadBit(int channel);
+int io_read_bit(int channel);
 
-int ioReadAnalog(int channel);
-void ioWriteAnalog(int channel, int value);
+int io_read_analog(int channel);
+void io_write_analog(int channel, int value);
 
