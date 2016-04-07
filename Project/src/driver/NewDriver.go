@@ -1,5 +1,5 @@
 package driver
-
+/*
 import (
 	"fmt"
 	"time"
@@ -172,4 +172,5 @@ func elevGetObstructionSignal() int {
 		StopElevate()
 	}
 }*/
+
 
