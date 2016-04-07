@@ -7,8 +7,8 @@ import (
 
 const (
 	MOTOR_SPEED = 2800
-	NUM_FLOORS    = 4
-	NUM_BUTTONS   = 3 
+	N_FLOORS    = 4
+	N_BUTTONS   = 3 
 )
 
 
@@ -45,7 +45,7 @@ func Init() int{
 		elevSetDoorOpenLamp(0)
 		for f := 0; f <= N_FLOORS; f++ { //iterates over the 4 floors
 			for b := 0; b <= N_BUTTONS; b++ { //iterates over buttons for all other floors than the one you are in
-				elevSetButtonLamp(b, f, false) //clears every button lamp (false = light off)
+				SetButtonLamp(b, f, false) //clears every button lamp (false = light off)
 			}
 		}
 	} else {
@@ -80,18 +80,6 @@ func StopElevate() {
 	ioWriteAnalog(MOTOR, 0)
 }
 
-/*func ElevateTopFloor() {
-	if GetFloorSignal() != 3 {
-		ElevateUp()
-		for ioReadBit(sensors[3]) == 0 {
-			SetFloorIndicator(GetFloorSignal())
-			time.Sleep(200*time.Millisecond)
-		}
-		SetFloorIndicator(GetFloorSignal())
-		StopElevate()
-	}
-}*/
-
 func ElevateBottomFloor() {
 		if GetFloorSignal() != 0 {
 		ElevateDown()
@@ -102,39 +90,26 @@ func ElevateBottomFloor() {
 		SetFloorIndicator(GetFloorSignal())
 		StopElevate()
 	}
-
 }
 
-//Check initialization of hardware, drive down to IDLE, clear all lights except floor indicator.
-func elev_init() int {
-	init_success := ioInit()
-
-	if init_success == 1 {
-		for f := 0; f <= N_FLOORS; f++ { //iterates over the 4 floors
-			for b := 0; b <= N_BUTTONS; b++ { //iterates over buttons for all other floors than the one you are in
-				elevSetButtonLamp(b, f, false) //clears every button lamp (false = light off)
-			}
-		}
+func SetFloorIndicator() bool {
+	if (floor & 0x02) != 0 { // handles the odd numbered floors
+		ioSetBit(LIGHT_FLOOR_IND1)
 	} else {
-		fmt.Println("Unable to initialize elevator hardware!")
+		ioClearBit(LIGHT_FLOOR_IND1)
 	}
-
-	elevSetStopLamp(0)
-	elevSetDoorOpenLamp(0)
-
-	//Finne ut hvor vi er, dersom vi ikke er i 1. etasje skal heisen forflytte seg ned dit.
-	// Så må vi sette på etasjeindikatoren.
-	//floor := elevGetFloorSignal()
-	for elevGetFloorSignal() != 0 {
-		elevSetMotorDirection(-1)
+	if (floor & 0x01) != 0 { // handles the even numbered floors
+		ioSetBit(LIGHT_FLOOR_IND2)
+	} else {
+		ioClearBit(LIGHT_FLOOR_IND2)
 	}
-	elevSetMotorDirection(0)
-	elevSetFloorIndicator(elevGetFloorSignal())
-	return 1
+	if floor < 0 || floor >= N_FLOORS{
+		return false 
+	}
+	return true 
 }
 
-
-func elevSetButtonLamp(floor int, button int, value bool) {
+func SetButtonLamp(floor int, button int, value bool) {
 	// floor can be any N_FLOOR
 	// button indicates UP (= 1), DOWN (=-1) or COMMAND (=0)
 	// value sets the light on/off
@@ -149,19 +124,6 @@ func elevSetButtonLamp(floor int, button int, value bool) {
 	}
 }
 
-func elevSetFloorIndicator(floor int) {
-	if (floor & 0x02) != 0 { // handles the odd numbered floors
-		ioSetBit(LIGHT_FLOOR_IND1)
-	} else {
-		ioClearBit(LIGHT_FLOOR_IND1)
-	}
-
-	if (floor & 0x01) != 0 { // handles the even numbered floors
-		ioSetBit(LIGHT_FLOOR_IND2)
-	} else {
-		ioClearBit(LIGHT_FLOOR_IND2)
-	}
-}
 
 func elevSetDoorOpenLamp(door int) {
 	if door == 1 {
@@ -198,4 +160,16 @@ func elevGetStopSignal() int {
 func elevGetObstructionSignal() int {
 	return (ioReadBit(OBSTRUCTION))
 }
+
+/*func ElevateTopFloor() {
+	if GetFloorSignal() != 3 {
+		ElevateUp()
+		for ioReadBit(sensors[3]) == 0 {
+			SetFloorIndicator(GetFloorSignal())
+			time.Sleep(200*time.Millisecond)
+		}
+		SetFloorIndicator(GetFloorSignal())
+		StopElevate()
+	}
+}*/
 
