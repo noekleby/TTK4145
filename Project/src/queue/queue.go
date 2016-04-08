@@ -1,14 +1,20 @@
 package queue
 
 import (
-	"../eventHandler"
 	"../driver"
+	"../eventhandler"
 )
+
+type order struc {
+InternalOrders [N_FLOORS] int
+ExternalUp [N_FLOORS] int
+ExternalDown [N_FLOORS] int
+PrevFloor, Dir int }
 
 func EmptyQueue bool {
 	for f := 0; f < driver.N_FLOORS; f++ {
 		for b := 0; b < driver.N_BUTTONS; b++ {
-			if Msg.ExternalUp[i] == 0 || Msg.ExDownOrders[i] == 0 || Msg.InOrders[i] == 0 {
+			if order.ExternalUp[i] == 0 || order.ExternalDown[i] == 0 || order.InternalOrders[i] == 0 {
 				return true
 			}
 		}
@@ -24,21 +30,21 @@ func Direction () int{
 	if EmptyQueue == 0 {    //Should stop (= 0) if emptyqueue is true
 		return 0
 	}
-	if InternalOrders[PrevFloor] { 	//Should stop if the new order is the same as the previous (you're in the same floor)
+	if order.InternalOrders[PrevFloor] { 	//Should stop if the new order is the same as the previous (you're in the same floor)
 		return 0
 	}
-	if dir { // direction == up
+	if order.dir { // direction == up
 		//Check if (Prev.floor+1) which is current floor until the top. If we detect an order in the queue, the lift continues upward
-		for i := PrevFloor + 1; i < N_FLOORS; i++ {
-			if InternalOrders[i] || ExternalUp[i] || ExternalDown[i] {
+		for i := order.PrevFloor + 1; i < driver.N_FLOORS; i++ {
+			if order.InternalOrders[i] || order.ExternalUp[i] || order.ExternalDown[i] {
 				return 1 //lift goes up
 			}
 		}
 		return -1
 	}
-	if dir == -1 { // or just use else
-		for i := PrevFloor - 1; i >= 0; i-- { // just the opposite of the previous if statement
-			if InternalOrders[i] || ExternalUp[i] || ExternalDown[i] {
+	if order.dir == -1 { // or just use else
+		for i := order.PrevFloor - 1; i >= 0; i-- { // just the opposite of the previous if statement
+			if order.InternalOrders[i] || order.ExternalUp[i] || order.ExternalDown[i] {
 				return -1 //lift goes down
 			}
 		}
@@ -47,19 +53,26 @@ func Direction () int{
 }
 
 func RemoveOrders() { //Orders that are finished
-	InternalOrders[PrevFloor] = 0
-	SetButtonLamp(PrevFloor,0,false) // resets previous floor which always will be done when function is called 
-	if dir { // Resets all orders in up direction
-		ExternalUp[PrevFloor] = 0
-		SetButtonLamp(PrevFloor,1,false)
+	order.InternalOrders[order.PrevFloor] = 0
+	SetButtonLamp(order.PrevFloor,0,false) // resets previous floor which always will be done when function is called 
+	if order.dir { // Resets all orders in up direction
+		order.ExternalUp[order.PrevFloor] = 0
+		SetButtonLamp(order.PrevFloor,1,false)
 	}
-	if dir == -1 {
-		ExternalDown[PrevFloor] = 0
-		SetButtonLamp(PrevFloor,-1,false)
+	if order.dir == -1 {
+		ExternalDown[order.PrevFloor] = 0
+		SetButtonLamp(order.PrevFloor,-1,false)
 	}
 }
 
-func AdddOrder() {
-	
+func AddOrder(newOrder button_info) {
+	switch newOrder.button {
+		case 1:
+			order.ExternalUp[newOrder.Floor] = 1
+		case -1:
+			order.ExternalDown[newOrder.Floor] = 1
+		case 0:
+			order.InternalOrders[newOrder.Floor] = 1
+	}
 }
 
