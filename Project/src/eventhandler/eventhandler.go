@@ -1,16 +1,67 @@
-package eventHandler
+package eventhandler
 
 import (
+	"../driver"
 	"fmt"
-	"time"
-	. "backup"
-	. "driver"
-	. "fsm"
-	. "log"
-	. "main"
-	. "network"
-	. "queue"
 )
+
+
+type Button_info struct {
+	Button int
+	Floor int 
+}
+
+var button = [driver.N_FLOORS][driver.N_BUTTONS]int{
+	{0, 0, 0},
+	{0, 0, 0},
+	{0, 0, 0},
+	{0, 0, 0},
+}
+
+func CheckEvents(floorChannel chan int, buttonChannel chan Button_info) {
+	go FloorEventCheck(floorChannel)
+	go ButtonEventCheck(buttonChannel)
+}
+
+func FloorEventCheck(event chan int) {
+	prevFloor := 0
+	for {
+		newFloor := driver.GetFloorSignal()
+		if newFloor != prevFloor {
+			prevFloor = newFloor
+			event <- newFloor
+		}
+	}
+}
+
+func ButtonEventCheck(event chan Button_info) {
+	prevButton := button
+	newButton := button
+	for { //fmt.Println("Inside forever")
+		for f := 0; f < driver.N_FLOORS; f++ {
+			//fmt.Println("In f loop with f:", f)
+			for b := 0; b < driver.N_BUTTONS; b++ {
+				//fmt.Println("In b loop with b:", b)
+				newButton[f][b] = driver.ElevGetButtonSignal(b, f)
+				if (newButton[f][b] != prevButton[f][b]) && (newButton[f][b] == 1) {
+					fmt.Println("inside if sentence", prevButton, newButton)
+					prevButton[f][b] = newButton[f][b]
+					var buttonInf Button_info
+					buttonInf.Button = b
+					buttonInf.Floor = f
+					event <- buttonInf
+				}
+			}
+		}
+	}
+}
+
+
+
+
+
+
+/*
 //----------------------------------------------------- eventuelt putte i en egen definition module
 type MSG struct{
 	MsgType			int
@@ -160,4 +211,4 @@ func EventHandler(timerChan chan string, timeOutChan chan int, send_ch, receive_
 			TimerOut()  // gir "time out" hvis man er for lenge i en state
 		}
 	}
-}
+}*/

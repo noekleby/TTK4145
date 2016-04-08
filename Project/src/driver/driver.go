@@ -35,11 +35,12 @@ func Init() int{
 	if init_success == 1 {
 		StopElevate()
 		ElevateBottomFloor()
-		elevSetStopLamp(0)
-		elevSetDoorOpenLamp(0)
+		fmt.Println("I'm currently initializing elevator and hardware")
+		ElevSetStopLamp(0)
+		ElevSetDoorOpenLamp(0)
 		for f := 0; f < N_FLOORS; f++ { //iterates over the 4 floors
 			for b := 0; b < N_BUTTONS; b++ { //iterates over buttons for all other floors than the one you are in
-				SetButtonLamp(b, f, false) //clears every button lamp (false = light off)
+				SetButtonLamp(f, b, false) //clears every button lamp (false = light off)
 			}
 		}
 	} else {
@@ -77,8 +78,8 @@ func StopElevate() {
 func ElevateBottomFloor() {
 	if GetFloorSignal() != 0 {
 		ElevateDown()
+		fmt.Println("I'm currently driving")
 		for ioReadBit(sensors[0]) == 0 {
-			SetFloorIndicator(GetFloorSignal())
 			time.Sleep(time.Millisecond*200)
 		}
 		SetFloorIndicator(GetFloorSignal())
@@ -111,7 +112,7 @@ func SetButtonLamp(floor int, button int, value bool) {
 		if value {
 			ioSetBit(lamp_channel_matrix[floor][button])
 		} else {
-			//ioClearBit(lamp_channel_matrix[floor][button])
+			ioClearBit(lamp_channel_matrix[floor][button])
 		}
 	} else {
 		fmt.Println("ERROR: Unable to update the button lamps")
@@ -119,7 +120,7 @@ func SetButtonLamp(floor int, button int, value bool) {
 }
 
 
-func elevSetDoorOpenLamp(door int) {
+func ElevSetDoorOpenLamp(door int) {
 	if door == 1 {
 		ioSetBit(LIGHT_DOOR_OPEN)
 	} else {
@@ -127,7 +128,7 @@ func elevSetDoorOpenLamp(door int) {
 	}
 }
 
-func elevSetStopLamp(stop int) {
+func ElevSetStopLamp(stop int) {
 	if stop == 1 {
 		ioSetBit(LIGHT_STOP)
 	} else {
@@ -135,7 +136,7 @@ func elevSetStopLamp(stop int) {
 	}
 }
 
-func elevGetButtonSignal(button int, floor int) int {
+func ElevGetButtonSignal(button int, floor int) int {
 	if (floor >= 0) && button >= 0 { // checks if floor and button are valid
 		if ioReadBit(button_channel_matrix[floor][button]) == 1 { // what's the purpose of read_bit(?)
 			return 1
@@ -148,13 +149,16 @@ func elevGetButtonSignal(button int, floor int) int {
 	return -1
 }
 
-func elevGetStopSignal() int {
+func ElevGetStopSignal() int {
 	return (ioReadBit(STOP))
 }
-func elevGetObstructionSignal() int {
+func ElevGetObstructionSignal() int {
 	return (ioReadBit(OBSTRUCTION))
 }
 
+func GetDirection() int{
+	return ioReadBit(MOTORDIR)
+}
 /*func ElevateTopFloor() {
 	if GetFloorSignal() != 3 {
 		ElevateUp()
