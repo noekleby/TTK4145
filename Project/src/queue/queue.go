@@ -11,6 +11,8 @@ ExternalUp [N_FLOORS] int
 ExternalDown [N_FLOORS] int
 PrevFloor, Dir int }
 
+order.Dir = driver.GetDirection()
+
 func EmptyQueue bool {
 	for f := 0; f < driver.N_FLOORS; f++ {
 		for b := 0; b < driver.N_BUTTONS; b++ {
