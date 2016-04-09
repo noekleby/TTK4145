@@ -1,31 +1,30 @@
 package fsm
 
-import(
+import (
+	"../driver"
 	"fmt"
 	"time"
-	"../driver"
 )
 
-const(
+const (
 	IDLE = iota
-	ELEVATING 
-	DOOR_OPEN 
+	ELEVATING
+	DOOR_OPEN
 )
 
-type ElevatorState struct{
-	fsmState int //State
+type ElevatorState struct {
+	fsmState   int //State
 	floor, dir int
-	//destination int 
+	//destination int
 }
 
-
-//Initializing FSM 
+//Initializing FSM
 func (state *ElevatorState) InitFsm() {
 	fmt.Println("Currently initializin fsm going to state: IDLE")
-	elev.floor = 0
-	elev.dir = 0
+	state.floor = 0
+	state.dir = 0
 	//elev.destination = 0
-	elev.fsmState = IDLE
+	state.fsmState = IDLE
 }
 
 /*func (state ElevatorState) GetDestination() int {
@@ -33,33 +32,46 @@ func (state *ElevatorState) InitFsm() {
 }*/
 
 func (state *ElevatorState) SetDirection(dir int) {
-	state.dir = dir 
+	state.dir = dir
+}
+
+func (state *ElevatorState) Setfloor(f int) {
+	state.floor = f
 }
 
 func (state ElevatorState) GetDirection() int {
 	return state.dir
 }
 
-func (state ElevatorState) Getfloor() int {
+func (state ElevatorState) GetFloor() int {
 	return state.floor
 }
 
-func (state *ElevatorState) IDLE() { // we have to use pointer reciever beacause we want to read and write as oposed to just read. 	
+func (state ElevatorState) GetState() int {
+	return state.fsmState
+}
+
+func (state *ElevatorState) IDLE() { // we have to use pointer reciever beacause we want to read and write as oposed to just read.
 	fmt.Println("Going to state: IDLE")
 	driver.StopElevate()
-	elev.fsmState = IDLE
-	//elev.dir = 0
+	state.fsmState = IDLE
+	state.dir = 0
 }
 
 func (state *ElevatorState) Elevating(direction int) {
 	fmt.Println("Getting in to motion by going to state: ELEVATING")
 	state.dir = direction
+	fmt.Println("The Direction is:", state.dir)
 	if direction == 1 {
+		state.fsmState = ELEVATING
 		driver.ElevateUp()
-	} else {
+	} else if direction == -1 {
+		state.fsmState = ELEVATING
 		driver.ElevateDown()
+	} else {
+		time.Sleep(200 * time.Millisecond)
+		state.IDLE()
 	}
-	state.fsmState = ELEVATING
 
 }
 
@@ -68,10 +80,7 @@ func (state *ElevatorState) DoorOpen() {
 	driver.StopElevate()
 	state.fsmState = DOOR_OPEN
 	driver.ElevSetDoorOpenLamp(1)
-	time.Sleep(4000*time.Millisecond) //The lines under should happend after sleep. 
+	time.Sleep(400 * time.Millisecond) //The lines under should happend after sleep.
 	driver.ElevSetDoorOpenLamp(0)
 	state.IDLE()
 }
-
-
-

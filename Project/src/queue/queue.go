@@ -6,7 +6,7 @@ import (
 	//"../eventhandler"
 )
 
-Const (
+const (
 	UP = iota
 	DOWN
 	COMMAND
@@ -20,90 +20,121 @@ type Order struct {
 	dir            int
 }
 
-
 func (Order *Order) ShouldStop(floor, dir int) bool {
-	if dir == 1{
-		if InternalOrders[floor] == 1 || ExternalUp[floor] == 1  {
-			return true 
+	if dir == 1 {
+		if Order.InternalOrders[floor] == 1 || Order.ExternalUp[floor] == 1 {
+			return true
 		} else {
-			return false 
+			return false
 		}
 	} else {
-		if InternalOrders[floor] == 1 || ExternalDown[floor] == 1 {
-			return true 
+		if Order.InternalOrders[floor] == 1 || Order.ExternalDown[floor] == 1 {
+			return true
 		} else {
-			return false 
-		} 
+			return false
+		}
 	}
 }
 
-func (Order *Order) QueueDirection() int {
+func (Order *Order) SetDirection() {
 	Order.dir = driver.GetDirection()
-	if Order.EmptyQueue() == false { //Should stop (= 0) if emptyqueue is true
-		return 0
-	}
-	/*if Order.InternalOrders[Order.PrevFloor] { 	//Should stop if the new Order is the same as the previous (you're in the same floor)
-		return 0
-	}*/
-	if Order.dir == 1 { // direction == up
-		//Check if (Prev.floor+1) which is current floor until the top. If we detect an Order in the queue, the lift continues upward
-		for i := Order.PrevFloor + 1; i < driver.N_FLOORS; i++ {
-			if Order.InternalOrders[i] == 1 || Order.ExternalUp[i] == 1 || Order.ExternalDown[i] == 1 {
-				return -1 //lift goes up
-			} else {
-				return 1
+}
+
+func (Order *Order) QueueDirectionDown(floor int) int {
+	//Already checked if there are any orders in queue and there are
+	check := false
+	if floor == 0 {
+		return 1
+	} else {
+		for i := floor; i >= 0; i-- {
+			if Order.InternalOrders[i] == 1 || Order.ExternalDown[i] == 1 {
+				check = true
 			}
 		}
-	}
-	if Order.dir == -1 { // or just use else
-		for i := Order.PrevFloor - 1; i >= 0; i-- { // just the opposite of the previous if statement
-			if Order.InternalOrders[i] == 1 || Order.ExternalUp[i] == 1 || Order.ExternalDown[i] == 1 {
-				return 1 //lift goes down
-			} else {
-				return -1
-			}
+		if check == true {
+			return -1
+		} else {
+			return 1
 		}
 	}
-	return 0
+}
+
+func (Order *Order) QueueDirectionUp(floor int) int {
+	check := false
+	if floor == 3 {
+		return -1
+	} else {
+		for i := floor; i < driver.N_FLOORS; i++ {
+			if Order.InternalOrders[i] == 1 || Order.ExternalUp[i] == 1 {
+				check = true
+			}
+		}
+		if check == true {
+			return 1
+		} else {
+			return -1
+		}
+	}
+}
+
+func (Order *Order) QueueDirection(direction, floor int) int {
+	if Order.EmptyQueue() == true {
+		return 0
+	} else if direction == 1 {
+		return (Order.QueueDirectionUp(floor))
+	} else if direction == -1 {
+		return (Order.QueueDirectionDown(floor))
+	} else {
+		fmt.Println("Something wrong with queue.")
+		return 0
+	}
 }
 
 func (Order *Order) RemoveOrder(floor, dir int) {
 	if dir == 1 {
-		ExternalUp[floor] = 0
-		InternalOrders[floor] = 0 
+		Order.ExternalUp[floor] = 0
+		Order.InternalOrders[floor] = 0
 		driver.SetButtonLamp(floor, UP, false)
 		driver.SetButtonLamp(floor, COMMAND, false)
-	} 
-	if dir == -1 {
-		ExternalDown[floor] = 0 
-		InternalOrders[floor] = 0 
+		fmt.Println("inside remove order with dir == 1")
+	} else if dir == -1 {
+		Order.ExternalDown[floor] = 0
+		Order.InternalOrders[floor] = 0
 		driver.SetButtonLamp(floor, DOWN, false)
 		driver.SetButtonLamp(floor, COMMAND, false)
+		fmt.Println("inside remove order with dir == -1")
 	} else {
 		fmt.Println("Can not remove order from queue if direction is set to zero")
 	}
 
 }
 
-
 func (Order *Order) AddOrder(newOrder, New int) {
 	switch New {
 	case 0:
 		Order.ExternalUp[newOrder] = 1
+		driver.SetButtonLamp(newOrder, New, true)
 		fmt.Println("Order added in ExternalUp queue")
+		fmt.Println(Order.ExternalUp)
 	case 1:
 		Order.ExternalDown[newOrder] = 1
+		driver.SetButtonLamp(newOrder, New, true)
 		fmt.Println("Order added in ExternalDown queue")
+		fmt.Println(Order.ExternalDown)
 	case 2:
 		Order.InternalOrders[newOrder] = 1
+		driver.SetButtonLamp(newOrder, New, true)
 		fmt.Println("Order added in Internal queue")
-		fmt.Println(Order.InternalOrders[0], Order.InternalOrders[1], Order.InternalOrders[2], Order.InternalOrders[3])
+		fmt.Println(Order.InternalOrders)
 	}
 }
 
-
-
-
-
-
-
+func (Order *Order) EmptyQueue() bool {
+	check := true
+	for i := 0; i < driver.N_FLOORS; i++ {
+		if Order.ExternalUp[i] == 1 || Order.ExternalDown[i] == 1 || Order.InternalOrders[i] == 1 {
+			check = false
+		}
+	}
+	return check
+}

@@ -3,12 +3,12 @@ package eventhandler
 import (
 	"../driver"
 	"fmt"
+	"time"
 )
-
 
 type Button_info struct {
 	Button int
-	Floor int 
+	Floor  int
 }
 
 var button = [driver.N_FLOORS][driver.N_BUTTONS]int{
@@ -37,14 +37,14 @@ func FloorEventCheck(event chan int) {
 func ButtonEventCheck(event chan Button_info) {
 	prevButton := button
 	newButton := button
-	for { //fmt.Println("Inside forever")
+	fmt.Println(newButton)
+	for {
+		fmt.Println("Inside forever")
 		for f := 0; f < driver.N_FLOORS; f++ {
-			//fmt.Println("In f loop with f:", f)
 			for b := 0; b < driver.N_BUTTONS; b++ {
-				//fmt.Println("In b loop with b:", b)
 				newButton[f][b] = driver.ElevGetButtonSignal(b, f)
+				fmt.Println(newButton, prevButton)
 				if (newButton[f][b] != prevButton[f][b]) && (newButton[f][b] == 1) {
-					fmt.Println("inside if sentence", prevButton, newButton)
 					prevButton[f][b] = newButton[f][b]
 					var buttonInf Button_info
 					buttonInf.Button = b
@@ -53,13 +53,9 @@ func ButtonEventCheck(event chan Button_info) {
 				}
 			}
 		}
+		time.Sleep(200 * time.Millisecond)
 	}
 }
-
-
-
-
-
 
 /*
 //----------------------------------------------------- eventuelt putte i en egen definition module
@@ -67,7 +63,7 @@ type MSG struct{
 	MsgType			int
 	State 			int
 	PrevFloor 		int
-	Dir   			int 	//never 0. 
+	Dir   			int 	//never 0.
 	ExUpOrders 		[N_FLOORS]int //External orders
 	ExDownOrders	[N_FLOORS]int
 	InOrders		[N_FLOORS]int //internal orders
@@ -87,10 +83,10 @@ type Udp_message struct {
 var Msg = MSG{}
 //---------------------------------------------------------
 
-func InternalOrderDetector(orderChan chan Order) { 
-	var currSignalMatrix 	[3][N_FLOORS]int 
-	var prevSignalMatrix 	[3][N_FLOORS]int 
-	
+func InternalOrderDetector(orderChan chan Order) {
+	var currSignalMatrix 	[3][N_FLOORS]int
+	var prevSignalMatrix 	[3][N_FLOORS]int
+
 	for {
 		for floor:=0; floor < N_FLOORS; floor++ {
 			for button:=0; button < N_FLOORS; button++ {
@@ -117,7 +113,7 @@ func floorReached(floorReachedChan chan int) {
 	}
 }
 
-func EmptyQueue() bool { 
+func EmptyQueue() bool {
 	return ExactlyOneOrder() //Funksjon som ligger i queue, som sjekker om man har en og bare en ordre. Returnerer da true.
 }
 
@@ -138,7 +134,7 @@ func ExternalOrdersUpdate(otherLift MSG){ //går gjennom panelene på utsiden av
 				elevSetButtonLamp(i, -1, 1)
 			}
 		}
-			
+
 	case RemoveOrders:
 		for i:=0; i<N_FLOORS; i++ {
 			if (otherLift.ExUpOrders[i] == 0) {
@@ -159,15 +155,15 @@ func EventHandler(timerChan chan string, timeOutChan chan int, send_ch, receive_
 	floorReachedChan := make(chan int)
 	go InternalOrderDetector(orderChan)
 	go floorReached(floorReachedChan)
-	
+
 
 	for {
-		
+
 		select {
 
-		case UDP_Rec := <- receive_ch: //mottas og legges i UDP_Rec ; Mottar her en ny ordre 
+		case UDP_Rec := <- receive_ch: //mottas og legges i UDP_Rec ; Mottar her en ny ordre
 
-			fmt.Println("HEIHEIHEHEHI", Laddr.String()) 
+			fmt.Println("HEIHEIHEHEHI", Laddr.String())
 
 			if (Laddr.String() != UDP_Rec.Raddr) { // Sjekker om den nye ordren er forskjellig fra hva man har fra før
 				fmt.Println("beat2")
@@ -181,7 +177,7 @@ func EventHandler(timerChan chan string, timeOutChan chan int, send_ch, receive_
 		case order := <- orderEventChannel: //mottas og legges i order
 			AddOrder(order)
 			PrintMsg()
-			
+
 			Udp_msg.Data = EncodeMsg(Msg)
 			send_ch <- Udp_msg //Sender udp_msg
 
