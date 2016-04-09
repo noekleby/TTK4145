@@ -10,6 +10,72 @@ import (
 )
 
 func main() {
+
+	//Initzialization of elevator Hardware and fsm. 
+	if driver.Init() == 0 {
+		fmt.Println("The elevator was not able to initialize")
+	}
+	if driver.Init() == 1 {
+		fmt.Println("The elevator was able to initialize")
+	}
+	elevator.InitFsm()
+
+	var queue queue.Order
+	var elevator fsm.ElevatorState 
+
+	floorChannel := make(chan int)
+	buttonChannel := make(chan eventhandler.Button_info)
+
+	//Starting gorutines to check for events on buttons and floor sensors
+	eventhandler.CheckEvents(floorChannel, buttonChannel)
+
+	// infinite loop, to keep the elevator going 
+	for {
+		select {
+
+		case NewEvent := <-floorChannel:
+			dir = elevator.GetDirection()
+
+			if (NewEvent != -1) && queue.ShouldStop( NewEvent, dir) {
+				queue.RemoveOrder(elevator.Getfloor(), dir)
+				elevator.DoorOpen()
+
+			} 
+
+		case NewEvent := <-buttonChannel:
+			queue.AddOrder(NewEvent.Floor, NewEvent.Button)
+			if elevator.GetDirection() != queue.QueueDirection(){
+				elevator.SetDirection( queue.QueueDirection())
+				if elevator.GetDirection() != 0 {
+					elevator.Elevate()
+				}
+			}
+
+		default:
+			switch elevator.GetState(){
+			case fsm.IDLE {
+				elevator.SetDestination(queue.GetNextFloor( elevator.Getfloor()))
+				if GetDirection() != -1 {
+					elevator.Elevate(queue.QueueDirection())
+				}
+			}
+
+			}
+
+		}
+	}
+/*package main
+
+import (
+	"./driver"
+	"./eventhandler"
+	"./fsm"
+	"./queue"
+	"fmt"
+	//"time"
+)
+
+func main() {
 	if driver.Init() == 0 {
 		fmt.Println("The elevator was not able to initialize")
 	}
@@ -59,4 +125,5 @@ func main() {
 
 		}
 	}
-}
+}*/
+
