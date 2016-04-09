@@ -2,14 +2,12 @@ package main
 
 import (
 	"./driver"
-	"fmt"
 	"./eventhandler"
-	"./queue"
 	"./fsm"
+	"./queue"
+	"fmt"
 	//"time"
 )
-
-
 
 func main() {
 	if driver.Init() == 0 {
@@ -27,33 +25,37 @@ func main() {
 
 	for {
 		select {
-			case NewEvent := <- floorChannel:
-				fmt.Println("New floor event happend.", NewEvent)
-				if NewEvent != -1{
-					if (Queueinfo.InternalOrders[NewEvent] == 1 || Queueinfo.ExternalUp[NewEvent] == 1) && (Elevatorinfo.GetElevatorDirection() == 1){
-						Elevatorinfo.DoorOpen()
-					}
-					if (Queueinfo.InternalOrders[NewEvent] == 1 || Queueinfo.ExternalDown[NewEvent] == 1) && (Elevatorinfo.GetElevatorDirection() == -1) {
-						Elevatorinfo.DoorOpen()
-					}
+		case NewEvent := <-floorChannel:
+			Queueinfo = queue.GetQueueInfo()
+			fmt.Println("New floor event happened.", NewEvent)
+			if NewEvent != -1 {
+				fmt.Println(Queueinfo.GetIntQ(NewEvent), "Inside if sentence")
+				fmt.Println(Queueinfo.GetIntQ(0), "IntQ0")
+				fmt.Println(Queueinfo.GetIntQ(1), "IntQ1")
+				fmt.Println(Queueinfo.GetIntQ(2), "IntQ2")
+				fmt.Println(Queueinfo.GetIntQ(3), "IntQ3")
+				if (Queueinfo.GetIntQ(NewEvent) == 1 || Queueinfo.GetExUp(NewEvent) == 1) && (Elevatorinfo.GetElevatorDirection() == 1) {
+					Elevatorinfo.DoorOpen()
 				}
-
-
-			case NewEvent := <- buttonChannel:
-				driver.SetButtonLamp(NewEvent.Floor, NewEvent.Button, true)
-				queue.AddOrder(NewEvent.Floor, NewEvent.Button)
-				queueDir := Queueinfo.QueueDirection()
-				Dir := Elevatorinfo.GetElevatorDirection()
-				fmt.Println("queue direction", queueDir)
-				if Dir == queueDir{
-					fmt.Println("Order in same direction")
-
-				} else {
-					Elevatorinfo.Elevating(queueDir)
-
+				if (Queueinfo.GetIntQ(NewEvent) == 1 || Queueinfo.GetExDown(NewEvent) == 1) && (Elevatorinfo.GetElevatorDirection() == -1) {
+					Elevatorinfo.DoorOpen()
 				}
+			}
+
+		case NewEvent := <-buttonChannel:
+			driver.SetButtonLamp(NewEvent.Floor, NewEvent.Button, true)
+			Queueinfo.Add(NewEvent.Floor, NewEvent.Button)
+			queueDir := Queueinfo.QueueDirection()
+			Dir := Elevatorinfo.GetElevatorDirection()
+			fmt.Println("queue direction", queueDir)
+			if Dir == queueDir {
+				fmt.Println("Order in same direction")
+
+			} else {
+				Elevatorinfo.Elevating(queueDir)
+
+			}
 
 		}
 	}
 }
-

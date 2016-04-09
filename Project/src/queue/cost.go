@@ -1,6 +1,7 @@
 // Calculating cost for all elevators
 package queue
 
+/*
 import(
 	"../driver"
 )
@@ -26,8 +27,9 @@ func Cost (currFloor, targetFloor, direction int) int{
 			cost++
 		}
 		if direction > 0 {
-			cost += 5 
+			cost += 5
 		}
 	}
 	return cost
 }
+*/
