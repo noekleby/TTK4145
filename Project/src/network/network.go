@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	broadcastIP := "129.241.187.255"
+	//broadcastIP := "129.241.187.255"
 	localPort := 30000
 	serverPort := 20005
 	msgSize := 1024
@@ -21,6 +21,22 @@ type msg struct(	//used for decoding the message (unmarshalling)
 	currFloor int
 	// sende kø?
 )
+
+func GetLocalIP() string { // hjelpefunksjon fra stack overflow
+	addrs, err := net.InterfaceAddrs()
+    if err != nil {
+        return ""
+    }
+    for _, address := range addrs {
+        // check the address type and if it is not a loopback (localhost 127.0.0.1) then display it
+        if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+            if ipnet.IP.To4() != nil {
+                return ipnet.IP.String()
+            }
+        }
+    }
+    return ""
+}
 
 func Listen(socket *net.UDPConn) {
 	var storedChan := make(chan msg)
@@ -47,7 +63,7 @@ func Listen(socket *net.UDPConn) {
 func Transmit(socket *net.UDPConn, sendMsg chan msg) {
 	for {
 		buffer, err := json.Marshal(sendMsg)
-		if (err != nil){ // kan eventuelt lage en error function
+		if (err != nil){ // kan eventuelt lage en egen check error function
 			fmt.Println("Could not encode message.")
 			log.Println(err)
 		}
@@ -77,7 +93,7 @@ func Init(sendMsg chan msg){
 		defer listenSocket.Close() // defer utsetter kallet til de andre funksjonene har kjørt (trengs kanskje ikke her)
 	} 
 
-	serverAddress, err := net.ResolveUDPAddr("udp", broadcastIP+":"+strconv.Itoa(serverPort))
+	serverAddress, err := net.ResolveUDPAddr("udp", GetLocalIP()+":"+strconv.Itoa(serverPort))
 	if err != nil {
 		fmt.Println("There is an error in resolving.")
 	} 
