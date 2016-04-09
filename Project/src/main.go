@@ -34,6 +34,7 @@ func main() {
 				fmt.Println(Queueinfo.GetIntQ(1), "IntQ1")
 				fmt.Println(Queueinfo.GetIntQ(2), "IntQ2")
 				fmt.Println(Queueinfo.GetIntQ(3), "IntQ3")
+				fmt.Println(Queueinfo.GetIntQ(NewEvent+1), "IntQ3")
 				if (Queueinfo.GetIntQ(NewEvent) == 1 || Queueinfo.GetExUp(NewEvent) == 1) && (Elevatorinfo.GetElevatorDirection() == 1) {
 					Elevatorinfo.DoorOpen()
 				}

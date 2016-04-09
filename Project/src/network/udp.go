@@ -27,6 +27,7 @@ func listen(socket *net.UDPConn) {
 		}
 	}
 }
+
 func transmit(socket *net.UDPConn) {
 	for {
 		time.Sleep(2000 * time.Millisecond)
