@@ -57,7 +57,7 @@ func GetTransmitSocket () *net.UDPConn {
 	return transmitSocket
 }
 
-func sendHeartBeat() {
+func SendHeartbeat() {
 	send := make(chan []byte, 1)
 	go Transmit(GetTransmitSocket() ,send)
 
@@ -73,7 +73,7 @@ func sendHeartBeat() {
 	}
 }
 
-func sendStatus(toSend chan Message) {
+func SendStatus(toSend chan Message) {
 	send := make(chan []byte)
 	go Transmit(GetListenSocket(), send) // hmmm
 

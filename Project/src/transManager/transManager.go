@@ -25,7 +25,7 @@ func MessageTRX(receiveChan chan Message) {
 	storedChan := make(chan []byte)
 
 	go network.Listen(network.GetListenSocket(), storedChan)
-	go network.sendStatus(broadcastChan)
+	go network.SendStatus(broadcastChan)
 
 	for {
 		buffer := <-receive
@@ -45,7 +45,7 @@ func HeartbeatTRX(newElevatorChan chan string, deadElevatorChan chan string) {
 	storedChan := make(chan []byte, 1)
 	heartbeats := make(map[string]*time.Time)
 	go network.Listen(network.GetListenSocket(), storedChan)
-	go network.sendHeartBeat()
+	go network.SendHeartbeat()
 
 	for {
 		buffer := <-receive
@@ -77,7 +77,7 @@ func MessageReceiver(incommingMsgChan chan Message, orderOnSameFloorChan chan in
 		message := <-incommingMsgChan
 		switch message.MessageType {
 		case "newOrder":
-			i := addExternalOrder(message.TargetIP, message.Order)
+			i := queue.addExternalOrder(message.TargetIP, message.Order)
 			switch i {
 			case "empty":
 				orderInEmptyQueueChan <- message.Order.Floor
