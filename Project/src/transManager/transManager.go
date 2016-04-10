@@ -9,7 +9,18 @@ import (
     "definitions"
 )
 
-func MessageTx(receiveChan chan Message) {
+func messageTransmitter(msgType string, targetIP string, order Order) { 
+	newMessage := Message{
+		msgType,
+		myIP,
+		targetIP,
+		*(elevators[targetIP]),
+		order,
+	}
+	network.BroadcastMessage(newMessage)
+}
+
+func MessageTRX(receiveChan chan Message) {
 
 	storedChan := make(chan []byte)
 
@@ -23,13 +34,13 @@ func MessageTx(receiveChan chan Message) {
 		if err != nil {
 			fmt.Println("Error: ", err)
 		}
-		if RxMessage.SenderIP != GetLocalIP() {
+		if RxMessage.SenderIP != network.GetLocalIP() {
 			receiveChan <- RxMessage
 		}
 	}
 }
 
-func HeartbeatTx(newElevatorChan chan string, deadElevatorChan chan string) {
+func HeartbeatTRX(newElevatorChan chan string, deadElevatorChan chan string) {
 
 	storedChan := make(chan []byte, 1)
 	heartbeats := make(map[string]*time.Time)
@@ -38,7 +49,7 @@ func HeartbeatTx(newElevatorChan chan string, deadElevatorChan chan string) {
 
 	for {
 		otherBeatBs := <-receive
-		otherBeat := network.Heartbeat{}
+		otherBeat := Heartbeat{}
 		err := json.Unmarshal(otherBeatBs, &otherBeat)
 		if err!= nil {
 			fmt.Println("Error: ", err)
@@ -79,9 +90,9 @@ func MessageReceiver(incommingMsgChan chan Message, orderOnSameFloorChan chan in
 			elevators[message.TargetIP].LastPassedFloor = message.Order.Floor
 			elevators[message.TargetIP].InFloor = true
 		case "completedOrder":
-			OrderCompleted(message.Order.Floor, message.TargetIP)
+			queue.OrderCompleted(message.Order.Floor, message.TargetIP)
 		case "statusUpdate":
-			if message.SenderIP != myIP {
+			if message.SenderIP != network.GetLocalIP( {
 				_, exist := elevators[message.TargetIP]
 				if !exist {
 					newElev := Elevator{true, true, 1, 0, []bool{false, false, false, false}, []bool{false, false, false, false}, []bool{false, false, false, false}}
@@ -96,13 +107,13 @@ func MessageReceiver(incommingMsgChan chan Message, orderOnSameFloorChan chan in
 					elevators[message.TargetIP].DownOrders[floor] = elevators[message.TargetIP].DownOrders[floor] || message.Elevator.DownOrders[floor]
 					elevators[message.TargetIP].CommandOrders[floor] = elevators[message.TargetIP].CommandOrders[floor] || message.Elevator.CommandOrders[floor]
 				}
-				orderInEmptyQueueChan <- 1
-				lightUpdateChan <- 1
+				queue.orderInEmptyQueueChan <- 1
+				queue.lightUpdateChan <- 1
 			}
 
 		case "leftFloor":
 			fmt.Printf("Heis %s har forlatt etasjen:\n", message.TargetIP)
-			LeftFloor(message.TargetIP)
+			queue.LeftFloor(message.TargetIP)
 		}
 	}
 }
@@ -111,7 +122,7 @@ func HeartbeatReceiver(newElevatorChan chan string, deadElevatorChan chan string
 	for {
 		select {
 		case IP := <-newElevatorChan:
-			if IP != myIP {
+			if IP != network.GetLocalIP( {
 				fmt.Printf("Det er dukket opp en ny heis me IP: %s\n", IP)
 				_, exist := elevators[IP]
 				if exist {
@@ -143,11 +154,11 @@ func Init(){
  
 	newElevatorChan := make(chan string)
 	deadElevatorChan := make(chan string)
-	go HeartbeatTx(newElevatorChan, deadElevatorChan)
+	go HeartbeatTRX(newElevatorChan, deadElevatorChan)
 	go HeartbeatReceiver(newElevatorChan, deadElevatorChan)
 	
 	receiveChan := make(chan Message)
-	go MessageTx(receiveChan)
+	go MessageTRX(receiveChan)
     go queue.MessageReceiver(receiveChan, orderOnSameFloorChan, orderInEmptyQueueChan)
 	
 	time.Sleep(time.Second*5)
