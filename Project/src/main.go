@@ -6,6 +6,7 @@ import (
 	"./fsm"
 	"./queue"
 	"fmt"
+	//"./transManager.go"
 	//"time"
 )
 
@@ -22,6 +23,7 @@ func main() {
 	var queue queue.Order
 	var elevator fsm.ElevatorState
 
+	//transManager.Init()
 	elevator.InitFsm()
 
 	floorChannel := make(chan int)
@@ -58,10 +60,10 @@ func main() {
 		default:
 			switch elevator.GetState() {
 			case fsm.IDLE:
-				fmt.Println("Inside deafulte")
+				fmt.Println("Inside default")
 				fmt.Println(PrevDirection)
 				direct := queue.QueueDirection(PrevDirection, elevator.GetFloor())
-				fmt.Println("The direction from que is set to:", direct)
+				fmt.Println("The direction from queue is set to:", direct)
 				elevator.Elevating(direct)
 			}
 

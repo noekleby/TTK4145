@@ -28,9 +28,9 @@ func MessageTRX(receiveChan chan Message) {
 	go network.sendStatus(broadcastChan)
 
 	for {
-		RxMessageBs := <-receive
+		buffer := <-receive
 		RxMessage := Message{}
-		err := json.Unmarshal(RxMessageBs, &RxMessage)
+		err := json.Unmarshal(buffer, &RxMessage)
 		if err != nil {
 			fmt.Println("Error: ", err)
 		}
@@ -48,9 +48,9 @@ func HeartbeatTRX(newElevatorChan chan string, deadElevatorChan chan string) {
 	go network.sendHeartBeat()
 
 	for {
-		otherBeatBs := <-receive
+		buffer := <-receive
 		otherBeat := Heartbeat{}
-		err := json.Unmarshal(otherBeatBs, &otherBeat)
+		err := json.Unmarshal(buffer, &otherBeat)
 		if err!= nil {
 			fmt.Println("Error: ", err)
 		}
