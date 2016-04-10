@@ -34,7 +34,7 @@ func main() {
 	for {
 		select {
 
-		case NewEvent := <-floorChannel: // Gets 0,1,2 or 3, never -1 
+		case NewEvent := <-floorChannel:
 			dir := elevator.GetDirection()
 			if NewEvent != -1 {
 				elevator.Setfloor(NewEvent)
