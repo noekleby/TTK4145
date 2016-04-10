@@ -133,3 +133,22 @@ func HeartbeatReceiver(newElevatorChan chan string, deadElevatorChan chan string
 		}
 	}
 }
+
+func Init(){
+	runtime.GOMAXPROCS(runtime.NumCPU()) //sets the number of cpu cores the program can use simultaneously.
+	//sets it here to Numcpu which is the number of cores available. 
+ 
+	orderOnSameFloorChan := make(chan int)
+	orderInEmptyQueueChan := make(chan int)
+ 
+	newElevatorChan := make(chan string)
+	deadElevatorChan := make(chan string)
+	go HeartbeatTx(newElevatorChan, deadElevatorChan)
+	go HeartbeatReceiver(newElevatorChan, deadElevatorChan)
+	
+	receiveChan := make(chan Message)
+	go MessageTx(receiveChan)
+    go queue.MessageReceiver(receiveChan, orderOnSameFloorChan, orderInEmptyQueueChan)
+	
+	time.Sleep(time.Second*5)
+}

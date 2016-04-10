@@ -7,7 +7,6 @@ import (
 	"log" // to log errors (time and writes to standard errors)
 	"encoding/json"
 	"../definitions"
-	//"../queue"
 )
 
 var broadcastChan = make(chan Message)
@@ -119,26 +118,6 @@ func Transmit(socket *net.UDPConn, sendMsg chan Message) {
 		socket.Write([]byte(buffer))
 		time.Sleep(2*time.Second)
 	}
-}
-
-
-func Init(){
-	runtime.GOMAXPROCS(runtime.NumCPU()) //sets the number of cpu cores the program can use simultaneously.
-	//sets it here to Numcpu which is the number of cores available. 
- 
-	orderOnSameFloorChan := make(chan int)
-	orderInEmptyQueueChan := make(chan int)
- 
-	newElevatorChan := make(chan string)
-	deadElevatorChan := make(chan string)
-	go HeartbeatTx(newElevatorChan, deadElevatorChan)
-	//go queue.HeartbeatReceiver(newElevatorChan, deadElevatorChan)
-	
-	receiveChan := make(chan Message)
-	go Message.Tx(receiveChan)
-	//go queue.MessageReceiver(receiveChan, orderOnSameFloorChan, orderInEmptyQueueChan)
-	
-	time.Sleep(time.Second*5)
 }
 
 // Bruke marshall og unmarshall for encoding og decoding. Trengs for konvertere data til og fra byte-nivå og 
