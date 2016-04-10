@@ -8,9 +8,8 @@ import (
 const (
 	MOTOR_SPEED = 2800
 	N_FLOORS    = 4
-	N_BUTTONS   = 3 
+	N_BUTTONS   = 3
 )
-
 
 var button_channel_matrix = [N_FLOORS][N_BUTTONS]int{ //button command for 4 floors
 	{BUTTON_UP1, BUTTON_DOWN1, BUTTON_COMMAND1},
@@ -28,9 +27,8 @@ var lamp_channel_matrix = [N_FLOORS][N_BUTTONS]int{ //floor lights for 4 floors
 var sensors = [N_FLOORS]int{SENSOR_FLOOR1, SENSOR_FLOOR2, SENSOR_FLOOR3, SENSOR_FLOOR4}
 
 //Check initialization of hardware, drive down to IDLE, clear all lights except floor indicator.
-func Init() int{
+func Init() int {
 	init_success := ioInit()
-
 
 	if init_success == 1 {
 		StopElevate()
@@ -69,7 +67,7 @@ func ElevateBottomFloor() {
 		ElevateDown()
 		fmt.Println("I'm currently driving")
 		for ioReadBit(sensors[0]) == 0 {
-			time.Sleep(time.Millisecond*200)
+			time.Sleep(time.Millisecond * 200)
 		}
 		SetFloorIndicator(GetFloorSignal())
 		StopElevate()
@@ -79,7 +77,7 @@ func ElevateBottomFloor() {
 func GetFloorSignal() int {
 	for f := 0; f < N_FLOORS; f++ {
 		if ioReadBit(sensors[f]) == 1 {
-			return f 
+			return f
 		}
 	}
 	return -1
@@ -96,10 +94,10 @@ func SetFloorIndicator(floor int) bool {
 	} else {
 		ioClearBit(LIGHT_FLOOR_IND2)
 	}
-	if floor < 0 || floor >= N_FLOORS{
-		return false 
+	if floor < 0 || floor >= N_FLOORS {
+		return false
 	}
-	return true 
+	return true
 }
 
 func SetButtonLamp(floor int, button int, value bool) {
@@ -113,7 +111,6 @@ func SetButtonLamp(floor int, button int, value bool) {
 		fmt.Println("ERROR: Unable to update button lamps")
 	}
 }
-
 
 func ElevSetDoorOpenLamp(door int) {
 	if door == 1 {
@@ -133,9 +130,9 @@ func ElevSetStopLamp(stop int) {
 
 func ElevGetButtonSignal(button int, floor int) int {
 	if floor < 0 || floor >= N_FLOORS || button < 0 || button >= N_BUTTONS {
-		return 0 
+		return 0
 	} else {
-		return ioReadBit(button_channel_matrix[floor][buuton])
+		return ioReadBit(button_channel_matrix[floor][button])
 	}
 }
 
@@ -146,6 +143,6 @@ func ElevGetObstructionSignal() int {
 	return (ioReadBit(OBSTRUCTION))
 }
 
-func GetDirection() int{
+func GetDirection() int {
 	return ioReadBit(MOTORDIR)
 }

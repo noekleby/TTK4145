@@ -2,9 +2,9 @@ package fsm
 
 import (
 	"../driver"
+	//"definitions"
 	"fmt"
 	"time"
-	"definitions"
 )
 
 const (
@@ -12,6 +12,12 @@ const (
 	ELEVATING
 	DOOR_OPEN
 )
+
+type ElevatorState struct {
+	fsmState   int //State
+	floor, dir int
+	//destination int
+}
 
 //Initializing FSM
 func (state *ElevatorState) InitFsm() {
@@ -75,7 +81,7 @@ func (state *ElevatorState) DoorOpen() {
 	driver.StopElevate()
 	state.fsmState = DOOR_OPEN
 	driver.ElevSetDoorOpenLamp(1)
-	time.Sleep(400 * time.Millisecond) //The lines under should happend after sleep.
+	time.Sleep(2 * time.Second) //The lines under should happend after sleep.
 	driver.ElevSetDoorOpenLamp(0)
 	state.IDLE()
 }

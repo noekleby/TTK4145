@@ -2,8 +2,8 @@ package queue
 
 import (
 	"../driver"
+	//"definitions"
 	"fmt"
-	"definitions"
 	//"../eventhandler"
 )
 
@@ -13,26 +13,43 @@ const (
 	COMMAND
 )
 
+type Order struct {
+	InternalOrders [driver.N_FLOORS]int
+	ExternalUp     [driver.N_FLOORS]int
+	ExternalDown   [driver.N_FLOORS]int
+	PrevFloor      int
+	dir            int
+}
+
 func (Order *Order) ShouldStop(floor, dir int) bool {
+	if Order.InternalOrders[floor] == 1 {
+		return true
+	}
 	if dir == 1 {
-		if Order.InternalOrders[floor] == 1 || Order.ExternalUp[floor] == 1 {
+		if Order.ExternalUp[floor] == 1 || floor == driver.N_FLOORS-1 {
 			return true
-		} else {
+		} else if Order.QueueDirectionUp(floor) {
 			return false
+		} else {
+			return true
 		}
-	} else {
-		if Order.InternalOrders[floor] == 1 || Order.ExternalDown[floor] == 1 {
+	} else if dir == -1 {
+		if Order.ExternalDown[floor] == 1 || floor == 0 {
 			return true
-		} else {
+		} else if Order.QueueDirectionDown(floor) {
 			return false
+		} else {
+			return true
 		}
 	}
+	return true
 }
 
 func (Order *Order) SetDirection() {
 	Order.dir = driver.GetDirection()
 }
 
+/*
 func (Order *Order) QueueDirectionDown(floor int) int {
 	//Already checked if there are any orders in queue and there are
 	check := false
@@ -68,21 +85,61 @@ func (Order *Order) QueueDirectionUp(floor int) int {
 			return -1
 		}
 	}
-}
+}*/
 
+/*
 func (Order *Order) QueueDirection(direction, floor int) int {
 	if Order.EmptyQueue() == true {
 		return 0
+
 	} else if direction == 1 {
 		return (Order.QueueDirectionUp(floor))
+
 	} else if direction == -1 {
 		return (Order.QueueDirectionDown(floor))
 	} else {
 		fmt.Println("Something wrong with queue.")
 		return 0
 	}
+}*/
+
+func (Order *Order) QueueDirection(direction, floor int) int {
+	if Order.EmptyQueue() == true {
+		return 0
+
+	} else if direction == 1 {
+		if Order.QueueDirectionUp(floor) {
+			return 1
+		} else if Order.QueueDirectionDown(floor) {
+			return -1
+		}
+	} else if direction == -1 {
+		if Order.QueueDirectionDown(floor) {
+			return -1
+		} else if Order.QueueDirectionUp(floor) {
+			return 1
+		}
+	}
+	return 0
 }
 
+func (Order *Order) QueueDirectionUp(floor int) bool {
+	for f := floor + 1; f < driver.N_FLOORS; f++ {
+		if Order.InternalOrders[f] == 1 || Order.ExternalUp[f] == 1 || Order.ExternalDown[f] == 1 {
+			return true
+		}
+	}
+	return false
+}
+
+func (Order *Order) QueueDirectionDown(floor int) bool {
+	for f := floor - 1; f > -1; f-- {
+		if Order.InternalOrders[f] == 1 || Order.ExternalUp[f] == 1 || Order.ExternalDown[f] == 1 {
+			return true
+		}
+	}
+	return false
+}
 func (Order *Order) RemoveOrder(floor, dir int) {
 	if dir == 1 {
 		Order.ExternalUp[floor] = 0
@@ -90,14 +147,29 @@ func (Order *Order) RemoveOrder(floor, dir int) {
 		driver.SetButtonLamp(floor, UP, false)
 		driver.SetButtonLamp(floor, COMMAND, false)
 		fmt.Println("inside remove order with dir == 1")
+		if floor == 3 {
+			Order.ExternalDown[floor] = 0
+			driver.SetButtonLamp(floor, DOWN, false)
+		}
 	} else if dir == -1 {
 		Order.ExternalDown[floor] = 0
 		Order.InternalOrders[floor] = 0
 		driver.SetButtonLamp(floor, DOWN, false)
 		driver.SetButtonLamp(floor, COMMAND, false)
 		fmt.Println("inside remove order with dir == -1")
+		fmt.Println(floor)
+		if floor == 0 {
+			fmt.Println("Inside here?")
+			driver.SetButtonLamp(floor, UP, false)
+			Order.ExternalUp[floor] = 0
+		}
 	} else {
-		fmt.Println("Can not remove order from queue if direction is set to zero")
+		driver.SetButtonLamp(floor, COMMAND, false)
+		driver.SetButtonLamp(floor, DOWN, false)
+		driver.SetButtonLamp(floor, UP, false)
+		Order.ExternalDown[floor] = 0
+		Order.InternalOrders[floor] = 0
+		Order.ExternalUp[floor] = 0
 	}
 
 }
