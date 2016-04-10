@@ -3,7 +3,6 @@ package transManager
 import (
     "../queue"
     "../network"
-    "net"
     "time"
     "fmt"
     "definitions"
