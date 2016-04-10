@@ -62,28 +62,28 @@ func SendHeartbeat() {
 	go Transmit(GetTransmitSocket() ,send)
 
 	for {
-		myBeat := Heartbeat{GetLocalIP(), time.Now()}
-		myBeatBs, error := json.Marshal(myBeat)
+		localBeat := Heartbeat{GetLocalIP(), time.Now()}
+		buffer, err := json.Marshal(localBeat)
 
-		if error != nil {
-			fmt.Println("error:", error)
+		if err != nil {
+			fmt.Println("error:", err)
 		}
-		send <- myBeatBs
+		send <- buffer
 		time.Sleep(100 * time.Millisecond)
 	}
 }
 
 func SendStatus(toSend chan Message) {
 	send := make(chan []byte)
-	go Transmit(GetListenSocket(), send) // hmmm
+	go Transmit(GetListenSocket(), send) 
 
 	for {
 		temp := <-toSend
-		toSendBs, error := json.Marshal(temp)
-		if error != nil {
-			fmt.Println("error:", error)
+		buffer, err := json.Marshal(temp)
+		if err != nil {
+			fmt.Println("error:", err)
 		}
-		send <- toSendBs
+		send <- buffer
 	}
 }
 
@@ -124,11 +124,3 @@ func Transmit(socket *net.UDPConn, sendMsg chan Message) {
 // tekstrepresentasjon.
 // JSON er JavaScript Object Notation. Syntaks for å lagre og utveksle data. Lettere å bruke enn XML. 
 // Sjekk blog.golang json and go (google it!)
-
-
-/*func PrintMessages (storedChan chan msg) {
-	for {
-		msg := <- storedChan
-		fmt.Println(msg)
-	}
-}*/

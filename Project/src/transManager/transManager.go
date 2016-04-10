@@ -13,7 +13,7 @@ func messageTransmitter(msgType string, targetIP string, order Order) {
 		msgType,
 		myIP,
 		targetIP,
-		*(elevators[targetIP]),
+		*(elevators[targetIP]), // elevators er en map definert i queue (hos Truls)
 		order,
 	}
 	network.BroadcastMessage(newMessage)
@@ -48,17 +48,17 @@ func HeartbeatTRX(newElevatorChan chan string, deadElevatorChan chan string) {
 
 	for {
 		buffer := <-receive
-		otherBeat := Heartbeat{}
-		err := json.Unmarshal(buffer, &otherBeat)
+		storeBeat := Heartbeat{}
+		err := json.Unmarshal(buffer, &storeBeat)
 		if err!= nil {
 			fmt.Println("Error: ", err)
 		}
-		_, exist := heartbeats[otherBeat.Id]
+		_, exist := heartbeats[storeBeat.Id]
 		if exist {
-			heartbeats[otherBeat.Id] = &otherBeat.Time
+			heartbeats[storeBeat.Id] = &storeBeat.Time
 		} else {
-			newElevatorChan <- otherBeat.Id
-			heartbeats[otherBeat.Id] = &otherBeat.Time
+			newElevatorChan <- storeBeat.Id
+			heartbeats[storeBeat.Id] = &storeBeat.Time
 		}
 		for i, t := range heartbeats {
 			dur := time.Since(*t)
