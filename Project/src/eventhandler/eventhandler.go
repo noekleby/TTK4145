@@ -29,9 +29,7 @@ func FloorEventCheck(event chan int) {
 		newFloor := driver.GetFloorSignal()
 		if newFloor != prevFloor {
 			prevFloor = newFloor
-			if newFloor != -1 {
-				event <- newFloor
-			}
+			event <- newFloor
 		}
 	}
 }
