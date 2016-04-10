@@ -4,6 +4,7 @@ import (
 	"../driver"
 	"fmt"
 	"time"
+	"definitions"
 )
 
 const (
@@ -11,12 +12,6 @@ const (
 	ELEVATING
 	DOOR_OPEN
 )
-
-type ElevatorState struct {
-	fsmState   int //State
-	floor, dir int
-	//destination int
-}
 
 //Initializing FSM
 func (state *ElevatorState) InitFsm() {

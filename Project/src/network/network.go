@@ -6,43 +6,9 @@ import (
 	"time"
 	"log" // to log errors (time and writes to standard errors)
 	"encoding/json"
+	"../definitions"
 	//"../queue"
 )
-
-const (
-	localPort := 30000
-	serverPort := 20005
-	msgSize := 1024
-)
-
-type Heartbeat struct {
-	ID string
-	Time time.Time
-}
-
-type Message struct {
-	MessageTpe string
-	SenderIP string
-	TargetIP string //Which elevator that changes status
-	Elevator Elevator
-	Order Order
-}
-
-type Order struct {
-	Type  int
-	Floor int
-}
-
-type Elevator struct {
-	Active          bool
-	InFloor         bool
-	Direction       int
-	LastPassedFloor int
-
-	UpOrders      []bool
-	DownOrders    []bool
-	CommandOrders []bool
-}
 
 var broadcastChan = make(chan Message)
 
@@ -90,58 +56,6 @@ func GetTransmitSocket () *net.UDPConn {
 		defer transmitSocket.Close()
 	}
 	return transmitSocket
-}
-
-func HeartbeatTx(newElevatorChan chan string, deadElevatorChan chan string) {
-
-	storedChan := make(chan []byte, 1)
-	heartbeats := make(map[string]*time.Time)
-	go Listen(GetListenSocket(), storedChan)
-	go sendHeartBeat()
-
-	for {
-		otherBeatBs := <-receive
-		otherBeat := Heartbeat{}
-		err := json.Unmarshal(otherBeatBs, &otherBeat)
-		if err!= nil {
-			fmt.Println("error:", err)
-		}
-		_, exist := heartbeats[otherBeat.Id]
-		if exist {
-			heartbeats[otherBeat.Id] = &otherBeat.Time
-		} else {
-			newElevatorChan <- otherBeat.Id
-			heartbeats[otherBeat.Id] = &otherBeat.Time
-		}
-		for i, t := range heartbeats {
-			dur := time.Since(*t)
-			if dur.Seconds() > 1 {
-				fmt.Println("Warning:", dur)
-				deadElevatorChan <- i
-				delete(heartbeats, i)
-			}
-		}
-	}
-}
-
-func MessageTx(receiveChan chan Message) {
-
-	storedChan := make(chan []byte)
-
-	go Listen(GetListenSocket(), storedChan)
-	go sendStatus(broadcastChan)
-
-	for {
-		RxMessageBs := <-receive
-		RxMessage := Message{}
-		err := json.Unmarshal(RxMessageBs, &RxMessage)
-		if err != nil {
-			fmt.Println("error:", err)
-		}
-		if RxMessage.SenderIP != GetLocalIP() {
-			receiveChan <- RxMessage
-		}
-	}
 }
 
 func sendHeartBeat() {

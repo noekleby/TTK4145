@@ -4,12 +4,8 @@ import (
 	"../driver"
 	"fmt"
 	"time"
+	"../definitions"
 )
-
-type Button_info struct {
-	Button int
-	Floor  int
-}
 
 var button = [driver.N_FLOORS][driver.N_BUTTONS]int{
 	{0, 0, 0},

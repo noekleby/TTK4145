@@ -3,6 +3,7 @@ package queue
 import (
 	"../driver"
 	"fmt"
+	"definitions"
 	//"../eventhandler"
 )
 
@@ -11,14 +12,6 @@ const (
 	DOWN
 	COMMAND
 )
-
-type Order struct {
-	InternalOrders [driver.N_FLOORS]int
-	ExternalUp     [driver.N_FLOORS]int
-	ExternalDown   [driver.N_FLOORS]int
-	PrevFloor      int
-	dir            int
-}
 
 func (Order *Order) ShouldStop(floor, dir int) bool {
 	if dir == 1 {
