@@ -2,26 +2,81 @@ package eventhandler
 
 import (
 	"../driver"
+	"../definitions"
 	"fmt"
 	"time"
+	"fsm"
 )
 
-func CheckEvents(UpOrderChan chan int, DownOrderChan chan int, CommandOrderChan chan int, floorSensorChan) {
-	go FloorEventCheck(floorSensorChannel)
-	go ButtonEventCheck(UpOrderChan, DownOrderChan, CommandOrderChan)
-	go ButtonEventHandler(UpOrderChan, DownOrderChan, CommandOrderChan)
+func CheckEvents(UpOrderChan chan int, DownOrderChan chan int, CommandOrderChan chan int, floorSensorChan chan int, betweenFloorSensorChan chan int) {
+	elevator.InitFsm()
+	go floorEventCheck(floorSensorChan, betweenFloorSensorChan)
+	go buttonEventCheck(UpOrderChan, DownOrderChan, CommandOrderChan)
+	go buttonEventHandler(UpOrderChan, DownOrderChan, CommandOrderChan)
+	go floorEventHandler(floorSensorChannel, betweenFloorSensorChan)
 }
 
+func floorEventHandler(floorSensorChan chan int, betweenFloorSensorChan chan int) {
 
-func ButtonEventHandler(UpOrderChan chan int, DownOrderChan chan int, CommandOrderChan chan int){
+	for{
+		select{
+			case floor <- betweenFloorSensorChan:
+				//give a message to queue: "Not in floor"
+				fmt.Println("Between floors, should make a function to take car of this situation.")
+
+			case floor <- floorSensorChan:
+				if queue.ShouldStop(floor){
+					elevator.GoToDoorOpen()
+					queue.CompletedOrder(floor, "local")
+				}
+		}
+	}
+	
+}
+
+func buttonEventHandler(UpOrderChan chan int, DownOrderChan chan int, CommandOrderChan chan int){
 
 	for{
 		select{
 		case floor := <- UpOrderChan:
+			newOrder := Order{ UP, floor}
+			i := AddLocalOrder(newOrder)
+			switch i {
+				case "empty": 
+					if elevator.GetState() == IDLE{
+						direction := queue.NextDirection()
+						elevator.GoToElevating(direction)
+					} else {
+						fmt.Println("Elevator should always be in IDLE when empty queue, but it is not")
+					}
+				case "sameFloor":
+					switch elevator.GetState(){
+					case IDLE:
+						elevator.GoToDoorOpen()
+						queue.OrderCompleted()
+
+					case DOOR_OPEN: 
+						elevator.GoToDoorOpen()
+						queue.OrderCompleted()
+					}
+
+			}
 			
 		case floor := <- DownOrderChan:
+			newOrder := Order{ DOWN, floor}
+			i := AddLocalOrder(newOrder)
+			switch i {
+				case "empty": 
+				case "sameFloor":
+			}
 
 		case floor := <- CommandOrderChan:
+			newOrder := Order{ COMMAND, floor}
+			i := AddLocalOrder(newOrder)
+			switch i {
+				case "empty": 
+				case "sameFloor":
+			}
 
 		}
 
@@ -30,19 +85,23 @@ func ButtonEventHandler(UpOrderChan chan int, DownOrderChan chan int, CommandOrd
 
 
 
-func FloorEventCheck(floorSignal chan int) {
+func floorEventCheck(floorSensorChan chan int, betweenFloorSensorChan chan int) {
 	prevFloor := 0
 	for {
 		newFloor := driver.GetFloorSignal()
 		if newFloor != prevFloor {
 			prevFloor = newFloor
-			floorSignal <- newFloor
+			if newFloor == -1 {
+				betweenFloorSensorChan <- newFloor
+			} else{
+				floorSensorChan <- newFloor
+			}
 		}
 		time.Sleep(20 * time.Millisecond)
 	}
 }
 
-func ButtonEventCheck(UpOrderChan chan int, DownOrderChan chan int, CommandOrderChan chan int){
+func buttonEventCheck(UpOrderChan chan int, DownOrderChan chan int, CommandOrderChan chan int){
 	buttons := [driver.N_FLOORS][driver.N_BUTTONS]int{ 
 		{BUTTON_UP1, BUTTON_DOWN1, BUTTON_COMMAND1},
 		{BUTTON_UP2, BUTTON_DOWN2, BUTTON_COMMAND2},
