@@ -34,14 +34,12 @@ func main() {
 	for {
 		select {
 
-		case NewEvent := <-floorChannel:
+		case NewEvent := <-floorChannel: // Gets 0,1,2 or 3, never -1 
 			dir := elevator.GetDirection()
 			if NewEvent != -1 {
 				elevator.Setfloor(NewEvent)
 				if queue.ShouldStop(NewEvent, dir) {
-					fmt.Println("I should stop in this floor, floor:", elevator.GetFloor())
-					fmt.Println(PrevDirection)
-					queue.RemoveOrder(elevator.GetFloor(), PrevDirection)
+					queue.RemoveOrder(NewEvent, PrevDirection)
 					elevator.DoorOpen()
 				}
 			} else {

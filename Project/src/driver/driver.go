@@ -50,17 +50,6 @@ func Init() int{
 
 }
 
-
-
-func GetFloorSignal() int {
-	for f := 0; f < N_FLOORS; f++ {
-		if ioReadBit(sensors[f]) == 1 {
-			return f 
-		}
-	}
-	return -1 // instead of else return 
-}
-
 func ElevateDown() {
 	ioSetBit(MOTORDIR)
 	ioWriteAnalog(MOTOR, MOTOR_SPEED)
@@ -87,6 +76,15 @@ func ElevateBottomFloor() {
 	}
 }
 
+func GetFloorSignal() int {
+	for f := 0; f < N_FLOORS; f++ {
+		if ioReadBit(sensors[f]) == 1 {
+			return f 
+		}
+	}
+	return -1
+}
+
 func SetFloorIndicator(floor int) bool {
 	if (floor & 0x02) != 0 { // handles the odd numbered floors
 		ioSetBit(LIGHT_FLOOR_IND1)
@@ -105,9 +103,6 @@ func SetFloorIndicator(floor int) bool {
 }
 
 func SetButtonLamp(floor int, button int, value bool) {
-	// floor can be any N_FLOOR
-	// button indicates UP (= 1), DOWN (=-1) or COMMAND (=0)
-	// value sets the light on/off
 	if (floor >= 0) && (button >= 0) {
 		if value {
 			ioSetBit(lamp_channel_matrix[floor][button])
@@ -115,7 +110,7 @@ func SetButtonLamp(floor int, button int, value bool) {
 			ioClearBit(lamp_channel_matrix[floor][button])
 		}
 	} else {
-		fmt.Println("ERROR: Unable to update the button lamps")
+		fmt.Println("ERROR: Unable to update button lamps")
 	}
 }
 
@@ -137,16 +132,11 @@ func ElevSetStopLamp(stop int) {
 }
 
 func ElevGetButtonSignal(button int, floor int) int {
-	if (floor >= 0) && button >= 0 { // checks if floor and button are valid
-		if ioReadBit(button_channel_matrix[floor][button]) == 1 { // what's the purpose of read_bit(?)
-			return 1
-		} else {
-			return 0
-		}
+	if floor < 0 || floor >= N_FLOORS || button < 0 || button >= N_BUTTONS {
+		return 0 
 	} else {
-		fmt.Println("ERROR: Unable to read the button signal!")
+		return ioReadBit(button_channel_matrix[floor][buuton])
 	}
-	return -1
 }
 
 func ElevGetStopSignal() int {
@@ -159,15 +149,3 @@ func ElevGetObstructionSignal() int {
 func GetDirection() int{
 	return ioReadBit(MOTORDIR)
 }
-/*func ElevateTopFloor() {
-	if GetFloorSignal() != 3 {
-		ElevateUp()
-		for ioReadBit(sensors[3]) == 0 {
-			SetFloorIndicator(GetFloorSignal())
-			time.Sleep(200*time.Millisecond)
-		}
-		SetFloorIndicator(GetFloorSignal())
-		StopElevate()
-	}
-}*/
-
