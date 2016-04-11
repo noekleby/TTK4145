@@ -1,9 +1,16 @@
 package definitions
 
+import (
+	"time"
+	"../driver"
+)
+
 const (
-	localPort := 30000
-	serverPort := 20005
-	msgSize := 1024
+	LocalPort = 30000
+	ServerPort = 20012
+	MsgSize = 1024
+	HeartBeatPort = 30117
+	
 )
 
 type Heartbeat struct {
@@ -17,11 +24,6 @@ type Message struct {
 	TargetIP string //Which elevator that changes status
 	Elevator Elevator
 	Order Order
-}
-
-type Order struct {
-	Type  int
-	Floor int
 }
 
 type Elevator struct {
@@ -46,6 +48,8 @@ type Order struct {
 	ExternalDown   [driver.N_FLOORS]int
 	PrevFloor      int
 	dir            int
+	Type  int
+	Floor int
 }
 
 type ElevatorState struct {

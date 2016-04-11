@@ -5,14 +5,16 @@ import (
     "../network"
     "time"
     "fmt"
-    "definitions"
+    "../definitions"
     "builtin"
 )
+
+var elevators = map[string]*Elevator{}
 
 func messageTransmitter(msgType string, targetIP string, order Order) { 
 	newMessage := Message{
 		msgType,
-		myIP,
+		senderIP,
 		targetIP,
 		*(elevators[targetIP]), // elevators er en map definert i queue (hos Truls)
 		order,
@@ -113,7 +115,7 @@ func MessageReceiver(incommingMsgChan chan Message, orderOnSameFloorChan chan in
 
 		case "leftFloor":
 			fmt.Printf("Heis %s har forlatt etasjen:\n", message.TargetIP)
-			queue.LeftFloor(message.TargetIP)
+			//queue.LeftFloor(message.TargetIP) ikke implementert ennå
 		}
 	}
 }
@@ -128,14 +130,14 @@ func HeartbeatReceiver(newElevatorChan chan string, deadElevatorChan chan string
 				if exist {
 					elevators[IP].Active = true
 
-					messageTransmitter("statusUpdate", myIP, Order{-1, -1})
+					messageTransmitter("statusUpdate", senderIP, Order{-1, -1})
 					time.Sleep(1 * time.Millisecond)
 
 					messageTransmitter("statusUpdate", IP, Order{-1, -1})
 				} else {
 					newElev := Elevator{true, true, 1, 0, []bool{false, false, false, false}, []bool{false, false, false, false}, []bool{false, false, false, false}}
 					elevators[IP] = &newElev
-					messageTransmitter("statusUpdate", myIP, Order{-1, -1})
+					messageTransmitter("statusUpdate", senderIP, Order{-1, -1})
 				}
 			}
 		case IP := <-deadElevatorChan:

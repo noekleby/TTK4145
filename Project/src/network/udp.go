@@ -1,8 +1,7 @@
 // All UDP functions
 package network
-package main
 
-import (
+/*import (
 	"fmt"
 	"log"
 	"net"
@@ -38,11 +37,11 @@ func transmit(socket *net.UDPConn) {
 	}
 }
 
-/*func CheckError(err error) {
+func CheckError(err error) {
 	if err != nil {
 		fmt.Println("Error:", err)
 	}
-}*/
+}
 
 func main() {
 	broadcastIP := "129.241.187.255" //HUSK!!! riktig IP
@@ -60,4 +59,4 @@ func main() {
 
 	listen(listenSocket)
 	transmit(transmitSocket)
-}
+}*/

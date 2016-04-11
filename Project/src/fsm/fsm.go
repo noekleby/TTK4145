@@ -53,7 +53,7 @@ func (state ElevatorState) GetState() int {
 }
 
 func (state *ElevatorState) IDLE() { // we have to use pointer reciever beacause we want to read and write as oposed to just read.
-	fmt.Println("Going to state: IDLE")
+	//fmt.Println("Going to state: IDLE")
 	driver.StopElevate()
 	state.fsmState = IDLE
 	state.dir = 0

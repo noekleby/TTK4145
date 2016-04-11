@@ -6,6 +6,7 @@ import (
 	"./fsm"
 	"./queue"
 	"fmt"
+	"./network"
 	//"./transManager.go"
 	//"time"
 )
@@ -25,15 +26,24 @@ func main() {
 
 	//transManager.Init()
 	elevator.InitFsm()
-
 	floorChan := make(chan int)
 	UpOrderChan := make(chan int)
 	DownOrderChan := make(chan int)
 	CommandOrderChan := make(chan int)
 
+
+	//putt dette i main: 
+	newElevatorChan := make(chan string)
+	deadElevatorChan := make(chan string)
+	
+	go network.SendHeartbeat()
+	go network.HeartbeatEventCheck(newElevatorChan, deadElevatorChan)
+	go eventhandler.HeartbeatEventHandler(newElevatorChan, deadElevatorChan)
+
 	//Starting gorutines to check for events on buttons and floor sensors
 	eventhandler.CheckEvents(UpOrderChan, DownOrderChan, CommandOrderChan, floorChan)
 	PrevDirection := -1
+
 	// infinite loop, to keep the elevator going
 	for {
 		select {
@@ -80,8 +90,8 @@ func main() {
 		default:
 			switch elevator.GetState() {
 			case fsm.IDLE:
-				fmt.Println("Inside default")
-				fmt.Println(PrevDirection)
+				//fmt.Println("Inside default")
+				//fmt.Println(PrevDirection)
 				direction := queue.QueueDirection(PrevDirection, elevator.GetFloor())
 				if direction == 0 && queue.EmptyQueue() {
 					elevator.IDLE()

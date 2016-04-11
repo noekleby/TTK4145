@@ -3,14 +3,28 @@ package eventhandler
 import (
 	//"../definitions"
 	"../driver"
-	//"fmt"
+	"fmt"
 	"time"
+	//"../network"
 )
 
 type Button_info struct {
 	Button int
 	Floor  int
 }
+func HeartbeatEventHandler(newElevatorChan chan string, deadElevatorChan chan string ) {
+	for{
+		select {
+		case IP := <- newElevatorChan:
+			//if IP == network.GetLocalIP(){}
+			fmt.Println("A new Elevator online.", IP)
+		case IP := <- deadElevatorChan:
+			fmt.Println("We have lost an elevator", IP)
+		}
+	}
+	
+}
+
 
 /*var button = [driver.N_FLOORS][driver.N_BUTTONS]int{
 	{0, 0, 0},
