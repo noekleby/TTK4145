@@ -2,9 +2,16 @@ package queue
 
 import (
 	"../driver"
-	//"../definitions"
+	."../network"
+	//."../definitions"
 	"fmt"
 	//"../eventhandler"
+)
+
+const (
+	UP = iota
+	DOWN
+	COMMAND
 )
 
 type Order struct {
@@ -17,11 +24,65 @@ type Order struct {
 	Floor int
 }
 
-const (
-	UP = iota
-	DOWN
-	COMMAND
-)
+
+var elevators = map[string]*Elevator{}
+var localIP string = GetIP()
+
+func messageTransmitter(msgType string, receiverIP string, order Order){
+	msg := Message{
+		msgType,
+		localIP,
+		receiverIP,
+		*(elevators[receiverIP]),
+		order,
+	}
+	BroadcastMessage(msg)
+}
+
+func MessageReceiver(receivedMsgChan chan Message, sameFloorChan chan int, emptyQueueChan chan int){
+	msg := <- receivedMsgChan
+	switch msg.MessageType {
+		case "IncomingOrder":
+			orderMsgHandler := <- AddOrder(msg.ReceiverIP, msg.Order)
+			switch orderMsgHandler {
+				case "empty":
+					emptyQueueChan <- msg.Order.Floor
+				case "inSameFloor":
+					sameFloorChan <- msg.Order.Floor
+			}
+		case "QueueDirection":
+			elevators[msg.ReceiverIP].Direction = msg.Order.Type
+		case "newFloor":
+			elevators[msg.ReceiverIP].LastPassedFloor = msg.Order.Floor //LastPassedFloor er en ny funksjon som må legges til
+			elevators[msg.ReceiverIP].InFloor = true 
+		/*case "completedOrder":
+			OrderCompleted(msg.Order.Floor, msg.ReceiverIP)*/
+	 	/*case "sendStatus":
+		if message.SenderIP != myIP {
+				_, exist := elevators[message.TargetIP]
+				if !exist {
+					newElev := Elevator{true, true, 1, 0, []bool{false, false, false, false}, []bool{false, false, false, false}, []bool{false, false, false, false}}
+					elevators[message.TargetIP] = &newElev
+				}
+				elevators[message.TargetIP].InFloor = message.Elevator.InFloor
+				elevators[message.TargetIP].LastPassedFloor = message.Elevator.LastPassedFloor
+				elevators[message.TargetIP].Direction = message.Elevator.Direction
+
+				for floor := 0; floor < N_FLOORS; floor++ {
+					elevators[message.TargetIP].UpOrders[floor] = elevators[message.TargetIP].UpOrders[floor] || message.Elevator.UpOrders[floor]
+					elevators[message.TargetIP].DownOrders[floor] = elevators[message.TargetIP].DownOrders[floor] || message.Elevator.DownOrders[floor]
+					elevators[message.TargetIP].CommandOrders[floor] = elevators[message.TargetIP].CommandOrders[floor] || message.Elevator.CommandOrders[floor]
+				}
+				orderInEmptyQueueChan <- 1
+				lightUpdateChan <- 1
+			}
+
+		case "leftFloor":
+			fmt.Printf("Heis %s har forlatt etasjen:\n", message.TargetIP)
+			LeftFloor(message.TargetIP)
+		}*/
+	}
+}
 
 func (Order *Order) ShouldStop(floor, dir int) bool {
 	if Order.InternalOrders[floor] == 1 {

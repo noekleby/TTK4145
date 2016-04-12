@@ -121,7 +121,7 @@ func sendStatus(toSend chan Message) {
 
 func getTransmitSocket(port int) *net.UDPConn {
 
-	serverAddress, err := net.ResolveUDPAddr("udp", GetLocalIP()+":"+strconv.Itoa(port))
+	serverAddress, err := net.ResolveUDPAddr("udp", fmt.Sprintf("129.241.187.255:%d",port))
 	if err != nil {
 		fmt.Println("There is an error in resolving server:", err)
 	} 
