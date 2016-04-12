@@ -5,16 +5,16 @@ import (
 	"../driver"
 )
 
-const (
+/*const (
 	LocalPort = 30000
 	ServerPort = 20012
 	MsgSize = 1024
 	HeartBeatPort = 30117
 	
-)
+)*/
 
 type Heartbeat struct {
-	ID string
+	Id string
 	Time time.Time
 }
 

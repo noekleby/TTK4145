@@ -7,19 +7,21 @@ import (
 	//"../eventhandler"
 )
 
-const (
-	UP = iota
-	DOWN
-	COMMAND
-)
-
 type Order struct {
 	InternalOrders [driver.N_FLOORS]int
 	ExternalUp     [driver.N_FLOORS]int
 	ExternalDown   [driver.N_FLOORS]int
 	PrevFloor      int
 	dir            int
+	Type  int
+	Floor int
 }
+
+const (
+	UP = iota
+	DOWN
+	COMMAND
+)
 
 func (Order *Order) ShouldStop(floor, dir int) bool {
 	if Order.InternalOrders[floor] == 1 {
@@ -140,6 +142,7 @@ func (Order *Order) QueueDirectionDown(floor int) bool {
 	}
 	return false
 }
+
 func (Order *Order) RemoveOrder(floor, dir int) {
 	if dir == 1 {
 		Order.ExternalUp[floor] = 0

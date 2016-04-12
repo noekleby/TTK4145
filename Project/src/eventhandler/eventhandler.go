@@ -5,18 +5,21 @@ import (
 	"../driver"
 	"fmt"
 	"time"
+	"../fsm"
 	//"../network"
+	"../queue"
 )
 
 type Button_info struct {
 	Button int
 	Floor  int
 }
+
+
 func HeartbeatEventHandler(newElevatorChan chan string, deadElevatorChan chan string ) {
 	for{
 		select {
 		case IP := <- newElevatorChan:
-			//if IP == network.GetLocalIP(){}
 			fmt.Println("A new Elevator online.", IP)
 		case IP := <- deadElevatorChan:
 			fmt.Println("We have lost an elevator", IP)
@@ -33,9 +36,85 @@ func HeartbeatEventHandler(newElevatorChan chan string, deadElevatorChan chan st
 	{0, 0, 0},
 }*/
 
-func CheckEvents(UpOrderChan, DownOrderChan, CommandOrderChan, floorChan chan int) {
+
+func ButtonandFloorEventHandler() {
+
+	var queue queue.Order
+	var elevator fsm.ElevatorState
+
+	elevator.InitFsm()
+	floorChan := make(chan int)
+	UpOrderChan := make(chan int)
+	DownOrderChan := make(chan int)
+	CommandOrderChan := make(chan int)
+
+
 	go FloorEventCheck(floorChan)
 	go ButtonEventCheck(UpOrderChan, DownOrderChan, CommandOrderChan)
+	PrevDirection := -1
+
+	for {
+		select {
+
+		case floor := <-floorChan:
+			fmt.Println("I do get a floor signal.")
+			dir := elevator.GetDirection()
+			if floor != -1 {
+				fmt.Println("I do go inside the floor if sentence")
+				elevator.Setfloor(floor)
+				if queue.ShouldStop(floor, dir) {
+					fmt.Println("Should I stop? yes.")
+					queue.RemoveOrder(floor, PrevDirection)
+					elevator.DoorOpen()
+				}
+			} else {
+				PrevDirection = dir
+			}
+
+		case floor := <-DownOrderChan:
+			queue.AddOrder(floor, 1)
+			if elevator.GetDirection() != queue.QueueDirection(PrevDirection, elevator.GetFloor()) {
+				elevator.SetDirection(queue.QueueDirection(PrevDirection, elevator.GetFloor()))
+				if elevator.GetDirection() != 0 {
+					elevator.Elevating(elevator.GetDirection())
+				}
+			}
+		case floor := <-UpOrderChan:
+			queue.AddOrder(floor, 0)
+			if elevator.GetDirection() != queue.QueueDirection(PrevDirection, elevator.GetFloor()) {
+				elevator.SetDirection(queue.QueueDirection(PrevDirection, elevator.GetFloor()))
+				if elevator.GetDirection() != 0 {
+					elevator.Elevating(elevator.GetDirection())
+				}
+			}
+		case floor := <-CommandOrderChan:
+			queue.AddOrder(floor, 2)
+			if elevator.GetDirection() != queue.QueueDirection(PrevDirection, elevator.GetFloor()) {
+				elevator.SetDirection(queue.QueueDirection(PrevDirection, elevator.GetFloor()))
+				if elevator.GetDirection() != 0 {
+					elevator.Elevating(elevator.GetDirection())
+				}
+			}
+		default:
+			switch elevator.GetState() {
+			case fsm.IDLE:
+				//fmt.Println("Inside default")
+				//fmt.Println(PrevDirection)
+				direction := queue.QueueDirection(PrevDirection, elevator.GetFloor())
+				if direction == 0 && queue.EmptyQueue() {
+					elevator.IDLE()
+				} else if direction == 0 && !queue.EmptyQueue() {
+					elevator.DoorOpen()
+					queue.RemoveOrder(elevator.GetFloor(), 0)
+				} else {
+					elevator.Elevating(direction)
+				}
+
+			}
+
+		}
+
+	}
 }
 
 func FloorEventCheck(event chan int) {

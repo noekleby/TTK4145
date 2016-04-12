@@ -41,7 +41,7 @@ func MessageTRX(receiveChan chan Message) {
 		}
 	}
 }
-
+/*
 func HeartbeatTRX(newElevatorChan chan string, deadElevatorChan chan string) {
 
 	storedChan := make(chan []byte, 1)
@@ -72,7 +72,7 @@ func HeartbeatTRX(newElevatorChan chan string, deadElevatorChan chan string) {
 			}
 		}
 	}
-}
+}*/
 
 func MessageReceiver(incommingMsgChan chan Message, orderOnSameFloorChan chan int, orderInEmptyQueueChan chan int) {
 	for {

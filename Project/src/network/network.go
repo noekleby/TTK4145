@@ -1,75 +1,158 @@
 package network
 
 import (
+	."../definitions"
+	"encoding/json"
 	"fmt"
 	"net"
 	"time"
-	"log" // to log errors (time and writes to standard errors)
-	"encoding/json"
-	"../definitions"
-	"strconv"
 )
 
-type Heartbeat struct {
-	ID string
-	Time string
-	//Time time.Time // Cannot marshall this type
-}
+const (
+	HeartBeatPort = 30115
+	StatusPort    = 30215
+)
 
-var broadcastChan = make(chan definitions.Message)
-var port = definitions.HeartBeatPort
+var broadcastChan = make(chan Message)
 
-func BroadcastMessage(message definitions.Message) {
+func BroadcastMessage(message Message) {
 	broadcastChan <- message
 }
-//Checks if any of the following events happens: one elevator dies or one elevator awakes. 
-func HeartbeatEventCheck(newElevatorChan chan string, deadElevatorChan chan string){
 
-	bufferHeartbeate := make(chan []byte, 1)
-	storedElevators := make(map[string]*time.Time)
+func GetIP() string {
 
-	go UdpRx(Heartbeate, port)
+	addrs, error := net.InterfaceAddrs()
+	if error != nil {
+		fmt.Println("error:", error)
+	}
+
+	for _, address := range addrs {
+		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				return ipnet.IP.String()
+			}
+		}
+	}
+	return ""
+}
+
+func HeartbeatTransceiver(newElevatorChan chan string, deadElevatorChan chan string) {
+
+	receive := make(chan []byte, 1)
+	heartbeats := make(map[string]*time.Time)
+	go udpRx(receive, HeartBeatPort)
+	go sendHeartBeat()
 
 	for {
-
-		RecievedHeartbeat := <- bufferHeartbeate
-		var newHeartbeat Heartbeat
-
-		error := json.Unmarshal(RecievedHeartbeat, &newHeartbeat)
+		otherBeatBs := <-receive
+		otherBeat := Heartbeat{}
+		error := json.Unmarshal(otherBeatBs, &otherBeat)
 		if error != nil {
 			fmt.Println("error:", error)
 		}
-
-		_,exist := storedElevators[newHeartbeat.ID]
-
+		_, exist := heartbeats[otherBeat.Id]
 		if exist {
-
-			t1, e := time.Parse(time.RFC3339, newHeartbeat.Time)
-			storedElevators[newHeartbeat.ID] = &t1
-
+			heartbeats[otherBeat.Id] = &otherBeat.Time
 		} else {
-
-			newElevatorChan <- newHeartbeat.ID
-			t1, e := time.Parse(time.RFC3339, newHeartbeat.Time)
-			storedElevators[newHeartbeat.ID] = &t1
+			newElevatorChan <- otherBeat.Id
+			heartbeats[otherBeat.Id] = &otherBeat.Time
 		}
-		for id, t := range storedElevators{
-			duration := time.Since(*t)
-			if duration.Seconds() > 2 {
-				deadElevatorChan <- id 
-				delete(storedElevators, id)
+		for i, t := range heartbeats {
+			dur := time.Since(*t)
+			if dur.Seconds() > 1 {
+				fmt.Println("Waring:", dur)
+				deadElevatorChan <- i
+				delete(heartbeats, i)
 			}
 		}
-
 	}
-
 }
 
-func UdpRx(rx chan []byte, port int) {
+func MessageTransceiver(receiveChan chan Message) {
+
+	receive := make(chan []byte)
+
+	go udpRx(receive, StatusPort)
+	go sendStatus(broadcastChan)
+
 	for {
-		socket := GetListenSocket(port)  
+		RxMessageBs := <-receive
+		RxMessage := Message{}
+		error := json.Unmarshal(RxMessageBs, &RxMessage)
+		if error != nil {
+			fmt.Println("error:", error)
+		}
+		if RxMessage.SenderIP != GetIP() {
+			receiveChan <- RxMessage
+		}
+	}
+}
+
+/****************************************************************************************************************
+Private
+*/
+
+func sendHeartBeat() {
+	send := make(chan []byte, 1)
+	go udpTx(send, HeartBeatPort)
+
+	for {
+		myBeat := Heartbeat{GetIP(), time.Now()}
+		myBeatBs, error := json.Marshal(myBeat)
+
+		if error != nil {
+			fmt.Println("error:", error)
+		}
+		send <- myBeatBs
+		time.Sleep(100 * time.Millisecond)
+	}
+}
+
+func sendStatus(toSend chan Message) {
+	send := make(chan []byte)
+	go udpTx(send, StatusPort)
+
+	for {
+		temp := <-toSend
+		toSendBs, error := json.Marshal(temp)
+		if error != nil {
+			fmt.Println("error:", error)
+		}
+		send <- toSendBs
+	}
+}
+
+func udpDial(port int) *net.UDPConn {
+	casting, error := net.ResolveUDPAddr("udp", fmt.Sprintf("129.241.187.255:%d", port))
+	if error != nil {
+		fmt.Println("error:", error)
+	}
+	socket, error := net.DialUDP("udp", nil, casting)
+	if error != nil {
+		fmt.Println("error:", error)
+	}
+	return socket
+}
+
+func udpListen(port int) *net.UDPConn {
+	local, error := net.ResolveUDPAddr("udp", fmt.Sprintf(":%d", port))
+	if error != nil {
+		fmt.Println("error:", error)
+	}
+
+	socket, error := net.ListenUDP("udp", local)
+	if error != nil {
+		fmt.Println("error:", error)
+	}
+	return socket
+}
+
+func udpRx(rx chan []byte, port int) {
+	for {
+		socket := udpListen(port)
 		buffer := make([]byte, 1024)
 		n, _, error := socket.ReadFromUDP(buffer)
+
 		if error != nil {
 			fmt.Println("error:", error)
 		}
@@ -80,117 +163,15 @@ func UdpRx(rx chan []byte, port int) {
 	}
 }
 
-func GetLocalIP() string { // hjelpefunksjon fra stack overflow
-	addrs, err := net.InterfaceAddrs()
-    if err != nil {
-        return ""
-    }
-    for _, address := range addrs {
-        // check the address type and if it is not a loopback (localhost 127.0.0.1) then display it
-        if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
-            if ipnet.IP.To4() != nil {
-                return ipnet.IP.String()
-            }
-        }
-    }
-    return ""
-}
-
-func SendHeartbeat() {
-	send := make(chan [] byte, 1)
-	go Transmit(GetTransmitSocket(port), send)
-
+func udpTx(tx chan []byte, port int) {
 	for {
-		t := time.Now()
-		localBeat := Heartbeat{GetLocalIP(), t.Format(time.RFC3339)}
-		buffer, err := json.Marshal(localBeat)
-
-		if err != nil {
-			fmt.Println("error:", err)
+		socket := udpDial(port)
+		dummy := <-tx
+		socket.SetWriteDeadline(time.Now().Add(10 * time.Second))
+		_, error := socket.Write(dummy)
+		if error != nil {
+			fmt.Println("error:", error)
 		}
-		send <- buffer
-		time.Sleep(100 * time.Millisecond)
+		socket.Close()
 	}
 }
-
-func SendStatus(toSend chan definitions.Message, port int) {
-	send := make(chan [] byte)
-	go Transmit(GetTransmitSocket(port), send) 
-
-	for {
-		temp := <-toSend
-		buffer, err := json.Marshal(temp)
-		if err != nil {
-			fmt.Println("error:", err)
-		}
-		send <- buffer
-	}
-}
-
-func Listen(socket *net.UDPConn, storedChan chan definitions.Message) {
-	for {
-		buffer := make([]byte, definitions.MsgSize)
-		length,_,err := socket.ReadFromUDP(buffer) 
-		if err == nil {
-			buffer = buffer[:length] // To just get the length of the message
-			fmt.Println("A message was received.", string(buffer))
-			var storedData definitions.Message
-			err = json.Unmarshal(buffer, &storedData) // data from buffer will be stored in storedData
-			if (err != nil){ // kan eventuelt lage en error function
-				fmt.Println("Could not decode message.")
-				log.Println(err)
-			}
-			storedChan <- storedData 
-		}else {
-			log.Println(err)
-		}
-		time.Sleep(400*time.Millisecond)
-	}
-}
-
-func GetListenSocket (port int) *net.UDPConn {
-	localAddress, err := net.ResolveUDPAddr("udp", ":"+strconv.Itoa(port))
-	if err != nil {
-		fmt.Println("There is an error in resolving.")
-	} 
-	listenSocket, err := net.ListenUDP("udp", localAddress)
-	if err != nil {
-		fmt.Println("There is an error in listening.")
-		defer listenSocket.Close() // defer utsetter kallet til de andre funksjonene har kjørt (trengs kanskje ikke her)
-	}
-	return listenSocket
-}
-
-func Transmit(socket *net.UDPConn, sendMsg chan [] byte) {
-	for {
-		temp := <- sendMsg
-		fmt.Println(temp)
-		fmt.Println("We do get inside Transmit")
-		buffer, err := json.Marshal(temp)
-		if (err != nil){ // kan eventuelt lage en egen check error function
-			fmt.Println("Could not encode message.")
-			log.Println(err)
-		}
-		socket.Write([]byte(buffer))
-		time.Sleep(2*time.Second)
-	}
-}
-
-
-func GetTransmitSocket (port int) *net.UDPConn {
-	serverAddress, err := net.ResolveUDPAddr("udp", GetLocalIP()+":"+strconv.Itoa(port))
-	if err != nil {
-		fmt.Println("There is an error in resolving.")
-	} 
-	transmitSocket, _ := net.DialUDP("udp", nil, serverAddress)
-	if err != nil {
-		fmt.Println("There is an error in dialing.")
-		defer transmitSocket.Close()
-	}
-	return transmitSocket
-}
-
-// Bruke marshall og unmarshall for encoding og decoding. Trengs for konvertere data til og fra byte-nivå og 
-// tekstrepresentasjon.
-// JSON er JavaScript Object Notation. Syntaks for å lagre og utveksle data. Lettere å bruke enn XML. 
-// Sjekk blog.golang json and go (google it!)
