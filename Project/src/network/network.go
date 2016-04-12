@@ -12,6 +12,7 @@ import (
 
 type Heartbeat struct {
 	ID string
+	Time string
 	//Time time.Time // Cannot marshall this type
 }
 
@@ -23,54 +24,42 @@ func BroadcastMessage(message definitions.Message) {
 }
 //Checks if any of the following events happens: one elevator dies or one elevator awakes. 
 func HeartbeatEventCheck(newElevatorChan chan string, deadElevatorChan chan string){
-	fmt.Println("Just got inside HeartbeatEventCheck")
 
+	bufferHeartbeate := make(chan []byte, 1)
+	storedElevators := make(map[string]*time.Time)
 
-	receiveHeartbeate := make(chan []byte, 1)
-	heartbeats := make(map[string]*time.Time)
-
-	go UdpRx(receiveHeartbeate, port)
+	go UdpRx(Heartbeate, port)
 
 	for {
 
-		//Instead of sending the Heartbeatstruct, we should send ID and time it. 
-		remoteHeartbeats := <- receiveHeartbeate
-		remoteHeartbeat := Heartbeat{}
-		error := json.Unmarshal(remoteHeartbeats, &remoteHeartbeat)
-		fmt.Println(remoteHeartbeat.ID)
+		RecievedHeartbeat := <- bufferHeartbeate
+		var newHeartbeat Heartbeat
 
+		error := json.Unmarshal(RecievedHeartbeat, &newHeartbeat)
 		if error != nil {
 			fmt.Println("error:", error)
 		}
-		_,exist := heartbeats[remoteHeartbeat.ID]
+
+		_,exist := storedElevators[newHeartbeat.ID]
+
 		if exist {
-			if (heartbeats[remoteHeartbeat.ID]) <= (&time.Now())  {
-				heartbeats[remoteHeartbeat.ID] = time.Now()
-			} else {
-				deadElevatorChan <- heartbeats[remoteHeartbeat.ID]
-				delete(heartbeats, id)
-			}
-		} else { 
-			newElevatorChan <- remoteHeartbeat.ID
-			heartbeats[remoteHeartbeat.ID] = time.Now()
+
+			t1, e := time.Parse(time.RFC3339, newHeartbeat.Time)
+			storedElevators[newHeartbeat.ID] = &t1
+
+		} else {
+
+			newElevatorChan <- newHeartbeat.ID
+			t1, e := time.Parse(time.RFC3339, newHeartbeat.Time)
+			storedElevators[newHeartbeat.ID] = &t1
 		}
-		/*
-		_, exist := heartbeats[remoteHeartbeat.ID]
-		if exist {
-			heartbeats[remoteHeartbeat.ID] = &remoteHeartbeat.Time
-			fmt.Println("Inside exist.")
-		} else { 
-			newElevatorChan <- remoteHeartbeat.ID
-			heartbeats[remoteHeartbeat.ID] = &remoteHeartbeat.Time
-			fmt.Println("Just sent ID to newElevatorChan")
-		}
-		for id, t := range heartbeats {
+		for id, t := range storedElevators{
 			duration := time.Since(*t)
-			if duration.Seconds() > 8 {
-				deadElevatorChan <- id
-				delete(heartbeats, id)
+			if duration.Seconds() > 2 {
+				deadElevatorChan <- id 
+				delete(storedElevators, id)
 			}
-		}*/
+		}
 
 	}
 
@@ -112,9 +101,9 @@ func SendHeartbeat() {
 	go Transmit(GetTransmitSocket(port), send)
 
 	for {
-		localBeat := Heartbeat{GetLocalIP()/*, time.Now()*/}
+		t := time.Now()
+		localBeat := Heartbeat{GetLocalIP(), t.Format(time.RFC3339)}
 		buffer, err := json.Marshal(localBeat)
-		fmt.Println(buffer)
 
 		if err != nil {
 			fmt.Println("error:", err)
