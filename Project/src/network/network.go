@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	HeartBeatPort = 30013
+	HeartBeatPort = 30113
 	StatusPort    = 30215
 )
 
@@ -162,7 +162,7 @@ func udpSend(msg chan []byte, port int) {
 	for {
 		socket := getTransmitSocket(port)
 		temp := <-msg
-		//socket.SetWriteDeadline(time.Now().Add(10 * time.Second))
+		socket.SetWriteDeadline(time.Now().Add(10 * time.Second))
 		_, error := socket.Write(temp)
 		if error != nil {
 			fmt.Println("error:", error)
