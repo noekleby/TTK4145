@@ -2,11 +2,11 @@ package main
 
 import (
 	"./driver"
-	"./eventhandler"
+	."./eventhandler"
 	//"./fsm"
 	//"./queue"
 	"fmt"
-	"./network"
+	."./network"
 	//"./transManager.go"
 	//"time"
 )
@@ -28,11 +28,11 @@ func main() {
 	
 	
 	//go network.HeartbeatEventCheck(newElevatorChan, deadElevatorChan)
-	go network.HeartbeatEventCheck(newElevatorChan, deadElevatorChan)
-	go eventhandler.HeartbeatEventHandler(newElevatorChan, deadElevatorChan)
+	go HeartbeatEventCheck(newElevatorChan, deadElevatorChan)
+	go HeartbeatEventHandler(newElevatorChan, deadElevatorChan)
 	go SendHeartBeat()
 
 	//Starting gorutines to check for events on buttons and floor sensors
-	eventhandler.ButtonandFloorEventHandler()
+	ButtonandFloorEventHandler()
 	
 }
