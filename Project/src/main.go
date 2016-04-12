@@ -28,8 +28,9 @@ func main() {
 	
 	
 	//go network.HeartbeatEventCheck(newElevatorChan, deadElevatorChan)
-	go network.HeartbeatTransceiver(newElevatorChan, deadElevatorChan)
+	go network.HeartbeatEventCheck(newElevatorChan, deadElevatorChan)
 	go eventhandler.HeartbeatEventHandler(newElevatorChan, deadElevatorChan)
+	go SendHeartBeat()
 
 	//Starting gorutines to check for events on buttons and floor sensors
 	eventhandler.ButtonandFloorEventHandler()

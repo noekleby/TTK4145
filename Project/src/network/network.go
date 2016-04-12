@@ -36,11 +36,11 @@ func GetIP() string {
 	return ""
 }
 
-func HeartbeatTransceiver(newElevatorChan chan string, deadElevatorChan chan string) {
+func HeartbeatEventCheck(newElevatorChan chan string, deadElevatorChan chan string) {
 
 	receive := make(chan []byte, 1)
 	heartbeats := make(map[string]*time.Time)
-	go udpRx(receive, HeartBeatPort)
+	go udpRecieve(receive, HeartBeatPort)
 	go sendHeartBeat()
 
 	for {
@@ -72,7 +72,7 @@ func MessageTransceiver(receiveChan chan Message) {
 
 	receive := make(chan []byte)
 
-	go udpRx(receive, StatusPort)
+	go udpRecieve(receive, StatusPort)
 	go sendStatus(broadcastChan)
 
 	for {
@@ -88,13 +88,9 @@ func MessageTransceiver(receiveChan chan Message) {
 	}
 }
 
-/****************************************************************************************************************
-Private
-*/
-
-func sendHeartBeat() {
+func SendHeartBeat() {
 	send := make(chan []byte, 1)
-	go udpTx(send, HeartBeatPort)
+	go udpSend(send, HeartBeatPort)
 
 	for {
 		myBeat := Heartbeat{GetIP(), time.Now()}
@@ -108,9 +104,10 @@ func sendHeartBeat() {
 	}
 }
 
+
 func sendStatus(toSend chan Message) {
 	send := make(chan []byte)
-	go udpTx(send, StatusPort)
+	go udpSend(send, StatusPort)
 
 	for {
 		temp := <-toSend
@@ -122,51 +119,48 @@ func sendStatus(toSend chan Message) {
 	}
 }
 
-func udpDial(port int) *net.UDPConn {
-	casting, error := net.ResolveUDPAddr("udp", fmt.Sprintf("129.241.187.255:%d", port))
-	if error != nil {
-		fmt.Println("error:", error)
+func getTransmitSocket(port int) *net.UDPConn {
+	serverAddress, err := net.ResolveUDPAddr("udp", GetLocalIP()+":"+strconv.Itoa(port)) // fmt.sprintf("IP:%d" ,port)
+	if err != nil {
+		fmt.Println("There is an error in resolving:", err)
+	} 
+	transmitSocket, _ := net.DialUDP("udp", nil, serverAddress)
+	if err != nil {
+		fmt.Println("There is an error in dialing:", err)
 	}
-	socket, error := net.DialUDP("udp", nil, casting)
-	if error != nil {
-		fmt.Println("error:", error)
-	}
-	return socket
+	return transmitSocket
 }
 
-func udpListen(port int) *net.UDPConn {
-	local, error := net.ResolveUDPAddr("udp", fmt.Sprintf(":%d", port))
-	if error != nil {
-		fmt.Println("error:", error)
+func getListenSocket(port int) *net.UDPConn {
+	localAddress, err := net.ResolveUDPAddr("udp", ":"+strconv.Itoa(port)) //fmt.Sprintf(":d", port)
+	if err != nil {
+		fmt.Println("There is an error in resolving:", err)
+	} 
+	listenSocket, err := net.ListenUDP("udp", localAddress)
+	if err != nil {
+		fmt.Println("There is an error in listening:", err)
 	}
-
-	socket, error := net.ListenUDP("udp", local)
-	if error != nil {
-		fmt.Println("error:", error)
-	}
-	return socket
+	return listenSocket
 }
 
-func udpRx(rx chan []byte, port int) {
+func udpRecieve(msg chan []byte, port int) {
 	for {
 		socket := udpListen(port)
 		buffer := make([]byte, 1024)
-		n, _, error := socket.ReadFromUDP(buffer)
-
-		if error != nil {
+		n, _, err := socket.ReadFromUDP(buffer)
+		if err != nil {
 			fmt.Println("error:", error)
 		}
-
 		buffer = buffer[:n]
-		rx <- buffer
+		msg <- buffer
 		socket.Close()
 	}
 }
 
-func udpTx(tx chan []byte, port int) {
+func udpSend(msg chan []byte, port int) {
 	for {
-		socket := udpDial(port)
-		dummy := <-tx
+		socket := GetTransmitSocket(port)
+		dummy := <-msg
 		socket.SetWriteDeadline(time.Now().Add(10 * time.Second))
 		_, error := socket.Write(dummy)
 		if error != nil {
