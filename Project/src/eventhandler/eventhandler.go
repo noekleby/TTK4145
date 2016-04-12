@@ -6,45 +6,33 @@ import (
 	"fmt"
 	"time"
 	"../fsm"
-	//"../network"
+	."../network"
 	"../queue"
 )
-
-type Button_info struct {
-	Button int
-	Floor  int
-}
 
 var elevators = map[string]*Elevator{}
 
 func HeartbeatEventHandler(newElevatorChan chan string, deadElevatorChan chan string ) {
-	elevators := make(map[string]*Elevators)
 	for{
 		select {
 		case IP := <- newElevatorChan:
 			fmt.Println("A new Elevator online:", IP)
-			_, exist = _, exist := elevators[IP]
+			_, exist := Elevators[IP]
 			if exist{
-				elevators[IP].active = true 
+				Elevators[IP].Active = true 
 			} else {
-				elevators[IP] = &Elevator{true, -1, 0, -1, IDLE, {0,0,0,0},{0,0,0,0},{0,0,0,0}}
-
+				fmt.Println("...")
+				//Elevators[IP] :=&Elevator{true, -1, 0, -1, IDLE, {false,false,false,false},{false,false,false,false},{false,false,false,false}}
 			}
-
 		case IP := <- deadElevatorChan:
 			fmt.Println("We have lost an elevator:", IP)
-			elevators[IP].active := false
+			Elevators[IP].Active = false
 		}
 	}
-	
 }
 
 func ButtonandFloorEventHandler() {
 
-	var queue queue.Order
-	var elevator fsm.ElevatorState
-
-	elevator.InitFsm()
 	floorChan := make(chan int)
 	UpOrderChan := make(chan int)
 	DownOrderChan := make(chan int)
@@ -60,56 +48,56 @@ func ButtonandFloorEventHandler() {
 
 		case floor := <-floorChan:
 			fmt.Println("I do get a floor signal.")
-			dir := elevator.GetDirection()
+			dir := Elevators[GetLocalIP()].Direction
 			if floor != -1 {
 				fmt.Println("I do go inside the floor if sentence")
-				elevator.Setfloor(floor)
+				Elevators[GetLocalIP()].Floor = floor
 				if queue.ShouldStop(floor, dir) {
 					fmt.Println("Should I stop? yes.")
 					queue.RemoveOrder(floor, PrevDirection)
-					elevator.DoorOpen()
+					fsm.GoToDoorOpen()
 				}
 			} else {
 				PrevDirection = dir
 			}
 
 		case floor := <-DownOrderChan:
-			queue.AddOrder(floor, 1)
-			if elevator.GetDirection() != queue.QueueDirection(PrevDirection, elevator.GetFloor()) {
-				elevator.SetDirection(queue.QueueDirection(PrevDirection, elevator.GetFloor()))
-				if elevator.GetDirection() != 0 {
-					elevator.Elevating(elevator.GetDirection())
+			queue.AddLocalOrder(floor, DOWN)
+			if (Elevators[GetLocalIP()].Direction) != queue.QueueDirection(PrevDirection, Elevators[GetLocalIP()].Floor) {
+				Elevators[GetLocalIP()].Direction = queue.QueueDirection(PrevDirection, Elevators[GetLocalIP()].Floor)
+				if Elevators[GetLocalIP()].Direction != 0 {
+					fsm.GoToElevating(Elevators[GetLocalIP()].Direction)
 				}
 			}
 		case floor := <-UpOrderChan:
-			queue.AddOrder(floor, 0)
-			if elevator.GetDirection() != queue.QueueDirection(PrevDirection, elevator.GetFloor()) {
-				elevator.SetDirection(queue.QueueDirection(PrevDirection, elevator.GetFloor()))
-				if elevator.GetDirection() != 0 {
-					elevator.Elevating(elevator.GetDirection())
+			queue.AddLocalOrder(floor, UP)
+			if Elevators[GetLocalIP()].Direction != queue.QueueDirection(PrevDirection, Elevators[GetLocalIP()].Floor) {
+				Elevators[GetLocalIP()].Direction = queue.QueueDirection(PrevDirection, Elevators[GetLocalIP()].Floor)
+				if Elevators[GetLocalIP()].Direction != 0 {
+					fsm.GoToElevating(Elevators[GetLocalIP()].Direction)
 				}
+			} else {
+				fmt.Println("Failed")
 			}
 		case floor := <-CommandOrderChan:
-			queue.AddOrder(floor, 2)
-			if elevator.GetDirection() != queue.QueueDirection(PrevDirection, elevator.GetFloor()) {
-				elevator.SetDirection(queue.QueueDirection(PrevDirection, elevator.GetFloor()))
-				if elevator.GetDirection() != 0 {
-					elevator.Elevating(elevator.GetDirection())
+			queue.AddLocalOrder(floor, COMMAND)
+			if Elevators[GetLocalIP()].Direction != queue.QueueDirection(PrevDirection, Elevators[GetLocalIP()].Floor) {
+				Elevators[GetLocalIP()].Direction = queue.QueueDirection(PrevDirection, Elevators[GetLocalIP()].Floor)
+				if Elevators[GetLocalIP()].Direction != 0 {
+					fsm.GoToElevating(Elevators[GetLocalIP()].Direction)
 				}
 			}
 		default:
-			switch elevator.GetState() {
-			case fsm.IDLE:
-				//fmt.Println("Inside default")
-				//fmt.Println(PrevDirection)
-				direction := queue.QueueDirection(PrevDirection, elevator.GetFloor())
+			switch Elevators[GetLocalIP()].FsmState {
+			case IDLE:
+				direction := queue.QueueDirection(PrevDirection, Elevators[GetLocalIP()].Floor)
 				if direction == 0 && queue.EmptyQueue() {
-					elevator.IDLE()
+					fsm.GoToIDLE()
 				} else if direction == 0 && !queue.EmptyQueue() {
-					elevator.DoorOpen()
-					queue.RemoveOrder(elevator.GetFloor(), 0)
+					fsm.GoToDoorOpen()
+					queue.RemoveOrder(Elevators[GetLocalIP()].Floor, 0)
 				} else {
-					elevator.Elevating(direction)
+					fsm.GoToElevating(direction)
 				}
 
 			}

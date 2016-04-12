@@ -14,11 +14,25 @@ const (
 	StatusPort    = 30215
 )
 
+var elevators = map[string]*Elevator{}
 var broadcastChan = make(chan Message)
 
 func BroadcastMessage(message Message) {
 	broadcastChan <- message
 }
+
+
+func MessageTransmitter(msgType string, receiverIP string, elevator Button_info){ //, Elevator Elevator
+	msg := Message{
+		msgType,
+		GetLocalIP(),
+		receiverIP,
+		*(elevators[receiverIP]),
+		elevator,
+	}
+	BroadcastMessage(msg)
+}
+
 
 func GetLocalIP() string {
 

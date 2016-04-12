@@ -3,7 +3,7 @@ package main
 import (
 	."./driver"
 	."./eventhandler"
-	//"./fsm"
+	"./fsm"
 	//"./queue"
 	"fmt"
 	."./network"
@@ -20,7 +20,9 @@ func main() {
 	if Init() == 1 {
 		fmt.Println("The elevator was able to initialize")
 	}
-	
+	fsm.InitFsm()
+
+
 	go ButtonandFloorEventHandler()
 
 	newElevatorChan := make(chan string)
