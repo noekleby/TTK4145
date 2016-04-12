@@ -1,7 +1,7 @@
 package main
 
 import (
-	"./driver"
+	."./driver"
 	."./eventhandler"
 	//"./fsm"
 	//"./queue"
@@ -14,25 +14,22 @@ import (
 func main() {
 
 	//Initzialization of elevator Hardware and fsm.
-	if driver.Init() == 0 {
+	if Init() == 0 {
 		fmt.Println("The elevator was not able to initialize")
 	}
-	if driver.Init() == 1 {
+	if Init() == 1 {
 		fmt.Println("The elevator was able to initialize")
 	}
+	
+	go ButtonandFloorEventHandler()
 
-
-	//putt dette i main: 
 	newElevatorChan := make(chan string)
 	deadElevatorChan := make(chan string)
-	
-	
-	//go network.HeartbeatEventCheck(newElevatorChan, deadElevatorChan)
 	go HeartbeatEventCheck(newElevatorChan, deadElevatorChan)
 	go HeartbeatEventHandler(newElevatorChan, deadElevatorChan)
 	go SendHeartBeat()
 
-	//Starting gorutines to check for events on buttons and floor sensors
-	ButtonandFloorEventHandler()
+	alwaysOnChan := make(chan string)
+	<- alwaysOnChan
 	
 }

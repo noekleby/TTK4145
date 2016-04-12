@@ -1,7 +1,7 @@
 package eventhandler
 
 import (
-	//"../definitions"
+	."../definitions"
 	"../driver"
 	"fmt"
 	"time"
@@ -15,27 +15,29 @@ type Button_info struct {
 	Floor  int
 }
 
+var elevators = map[string]*Elevator{}
 
 func HeartbeatEventHandler(newElevatorChan chan string, deadElevatorChan chan string ) {
+	elevators := make(map[string]*Elevators)
 	for{
 		select {
 		case IP := <- newElevatorChan:
-			fmt.Println("A new Elevator online.", IP)
+			fmt.Println("A new Elevator online:", IP)
+			_, exist = _, exist := elevators[IP]
+			if exist{
+				elevators[IP].active = true 
+			} else {
+				elevators[IP] = &Elevator{true, -1, 0, -1, IDLE, {0,0,0,0},{0,0,0,0},{0,0,0,0}}
+
+			}
+
 		case IP := <- deadElevatorChan:
-			fmt.Println("We have lost an elevator", IP)
+			fmt.Println("We have lost an elevator:", IP)
+			elevators[IP].active := false
 		}
 	}
 	
 }
-
-
-/*var button = [driver.N_FLOORS][driver.N_BUTTONS]int{
-	{0, 0, 0},
-	{0, 0, 0},
-	{0, 0, 0},
-	{0, 0, 0},
-}*/
-
 
 func ButtonandFloorEventHandler() {
 
