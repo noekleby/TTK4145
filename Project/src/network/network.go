@@ -29,7 +29,6 @@ func MessageReciever(messageRecieveChan chan Message) {
 		error := json.Unmarshal(buffer, &msg)
 		if error != nil {
 			fmt.Println("Error:", error)
-			fmt.Println("Det er her")
 			time.Sleep((4 * time.Second))
 		}
 		if msg.SenderIP != GetLocalIP() {
@@ -47,10 +46,9 @@ func MessageBroadcast(MessageBroadcastChan chan Message) {
 		buffer, error := json.Marshal(msg) //Can not call it buffer
 		if error != nil {
 			fmt.Println("Error:", error)
-			fmt.Println("Det er her1")
 			time.Sleep((4 * time.Second))
 		}
-		fmt.Println("Sending msg")
+		fmt.Println("Broadcasting message")
 		bufferSendChan <- buffer
 	}
 }

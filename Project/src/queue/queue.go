@@ -139,7 +139,9 @@ func RemoveOrder(floor int, dir int) {
 func AddLocalOrder(floor, buttonType int) {
 	var cheapestElevator string
 	if buttonType != COMMAND {
-		cheapestElevator = findCheapestElevator(floor)
+		//cheapestElevator = findCheapestElevator(floor)
+		cheapestElevator = "129.241.187.26"
+		fmt.Println("Inside addLocalOrder: ", cheapestElevator)
 	}
 	switch buttonType {
 	case UP:
@@ -173,7 +175,7 @@ func findCheapestElevator(floor int) string {
 		i++
 		fmt.Println("Cost for order:", calculateOrderCostForOnlyOneElevator(info.Floor, floor, info.Direction))
 	}
-	fmt.Println(costs)
+	fmt.Println(costs) // Får printet ut riktig cost, men begge heisene stopper alltid når de skal innom 3.etasje
 	lowestnumber := 0
 	for elev := 1; elev < len(Elevators); elev++ {
 		if costs[elev] < costs[lowestnumber] {
@@ -183,7 +185,7 @@ func findCheapestElevator(floor int) string {
 	j := 0
 	for ip, _ := range Elevators {
 		if j == lowestnumber {
-			fmt.Println(ip)
+			fmt.Println(ip) // Printer også ut riktig ip basert på hvem som har billigst cost
 			return ip
 		}
 		j++
