@@ -165,6 +165,40 @@ func AddLocalOrder(floor, buttonType int) {
 	}
 }
 
+func findCheapestElevator(floor int) string { // Think this is our obstacle
+	cheapestElevator := ""
+	minCost := 9999
+	for IP, elevator := range Elevators {
+		if Elevators[IP].Active == true {
+			cost := costFunction(elevator.Floor, floor, elevator)
+			fmt.Println("Cost for order is ", cost, " for IP ", IP)
+			if cost < minCost {
+				minCost = cost
+				cheapestElevator = IP
+			}
+			if cost == 0 {
+				break
+			}
+		}
+	}
+	fmt.Println("The cheapest IP is ", cheapestElevator)
+	return cheapestElevator // Does not calculate the first order?
+}
+
+func costFunction(currFloor int, orderedFloor int, elevator *Elevator) int {
+
+	cost := 0
+
+	if elevator.Direction == UP && orderedFloor < currFloor {
+		cost += 5
+
+	} else if elevator.Direction == DOWN && orderedFloor > currFloor {
+		cost += 5
+
+	}
+	return cost
+}
+
 /*
 func findCheapestElevator(floor int) string {
 	//length := len(Elevators)
@@ -220,40 +254,6 @@ func calculateOrderCostForOnlyOneElevator(currFloor int, orderedFloor int, direc
 	return cost
 
 }*/
-
-func findCheapestElevator(floor int) string {
-	cheapestElevator := ""
-	minCost := 9999
-	for IP, elevator := range Elevators {
-		if Elevators[IP].Active == true {
-			cost := costFunction(elevator.Floor, floor, elevator)
-			fmt.Println("Cost for order is ", cost, " for IP ", IP)
-			if cost < minCost {
-				minCost = cost
-				cheapestElevator = IP
-			}
-			if cost == 0 {
-				break
-			}
-		}
-	}
-	fmt.Println("The cheapest IP is ", cheapestElevator)
-	return cheapestElevator // Does not calculate the first order?
-}
-
-func costFunction(currFloor int, orderedFloor int, elevator *Elevator) int {
-
-	cost := 0
-
-	if elevator.Direction == UP && orderedFloor < currFloor {
-		cost += 5
-
-	} else if elevator.Direction == DOWN && orderedFloor > currFloor {
-		cost += 5
-
-	}
-	return cost
-}
 
 func EmptyQueue() bool {
 	check := true
