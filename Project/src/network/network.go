@@ -49,6 +49,9 @@ func MessageBroadcast(MessageBroadcastChan chan Message) {
 			time.Sleep((4 * time.Second))
 		}
 		fmt.Println("Broadcasting message")
+		fmt.Println("")
+		fmt.Println("")
+		fmt.Println("") //Just for easier reading in terminal
 		bufferSendChan <- buffer
 	}
 }

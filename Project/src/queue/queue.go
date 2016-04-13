@@ -139,9 +139,9 @@ func RemoveOrder(floor int, dir int) {
 func AddLocalOrder(floor, buttonType int) {
 	var cheapestElevator string
 	if buttonType != COMMAND {
-		//cheapestElevator = findCheapestElevator(floor)
-		cheapestElevator = "129.241.187.26"
-		fmt.Println("Inside addLocalOrder: ", cheapestElevator)
+		cheapestElevator = findCheapestElevator(floor)
+		//cheapestElevator = "129.241.187.26"
+		//fmt.Println("Inside addLocalOrder: ", cheapestElevator)
 	}
 	switch buttonType {
 	case UP:
@@ -165,6 +165,7 @@ func AddLocalOrder(floor, buttonType int) {
 	}
 }
 
+/*
 func findCheapestElevator(floor int) string {
 	//length := len(Elevators)
 	costs := [5]int{999, 999, 999, 999, 999} // How can we solve this?
@@ -175,7 +176,7 @@ func findCheapestElevator(floor int) string {
 		i++
 		fmt.Println("Cost for order:", calculateOrderCostForOnlyOneElevator(info.Floor, floor, info.Direction))
 	}
-	fmt.Println(costs) // Får printet ut riktig cost, men begge heisene stopper alltid når de skal innom 3.etasje
+	fmt.Println("Cost for first IP: ", costs[0], " Cost for second IP: ", costs[1]) // Får printet ut riktig cost, men begge heisene stopper alltid når de skal innom 3.etasje
 	lowestnumber := 0
 	for elev := 1; elev < len(Elevators); elev++ {
 		if costs[elev] < costs[lowestnumber] {
@@ -185,7 +186,7 @@ func findCheapestElevator(floor int) string {
 	j := 0
 	for ip, _ := range Elevators {
 		if j == lowestnumber {
-			fmt.Println(ip) // Printer også ut riktig ip basert på hvem som har billigst cost
+			fmt.Println("Returning from findCheapestElevator function:", ip) // Printer også ut riktig ip basert på hvem som har billigst cost
 			return ip
 		}
 		j++
@@ -218,6 +219,40 @@ func calculateOrderCostForOnlyOneElevator(currFloor int, orderedFloor int, direc
 	}
 	return cost
 
+}*/
+
+func findCheapestElevator(floor int) string {
+	cheapestElevator := ""
+	minCost := 9999
+	for IP, elevator := range Elevators {
+		if Elevators[IP].Active == true {
+			cost := costFunction(elevator.Floor, floor, elevator)
+			fmt.Println("Cost for order is ", cost, " for IP ", IP)
+			if cost < minCost {
+				minCost = cost
+				cheapestElevator = IP
+			}
+			if cost == 0 {
+				break
+			}
+		}
+	}
+	fmt.Println("The cheapest IP is ", cheapestElevator)
+	return cheapestElevator // Does not calculate the first order?
+}
+
+func costFunction(currFloor int, orderedFloor int, elevator *Elevator) int {
+
+	cost := 0
+
+	if elevator.Direction == UP && orderedFloor < currFloor {
+		cost += 5
+
+	} else if elevator.Direction == DOWN && orderedFloor > currFloor {
+		cost += 5
+
+	}
+	return cost
 }
 
 func EmptyQueue() bool {
