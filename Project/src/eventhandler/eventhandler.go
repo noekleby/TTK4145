@@ -1,59 +1,105 @@
 package eventhandler
 
 import (
-	."../definitions"
+	. "../definitions"
 	"../driver"
+	"../fsm"
+	. "../network"
+	"../queue"
 	"fmt"
 	"time"
-	"../fsm"
-	."../network"
-	"../queue"
 )
 
-var elevators = map[string]*Elevator{}
+func MessageTypeHandler(messageReciveChan chan Message, floorChan chan int, upOrderChan chan int, downOrderChan chan int, commandOrderChan chan int) {
 
-func HeartbeatEventHandler(newElevatorChan chan string, deadElevatorChan chan string ) {
-	for{
+	for {
+		msg := <-messageReciveChan
+		switch msg.MessageType {
+
+		case "Remove order up":
+			if msg.SenderIP != GetLocalIP() {
+				updateElevatorStatus(msg.SenderIP, msg.Elevator)
+				queue.RemoveRemoteOrder(msg.Elevator.Floor, UP)
+			}
+
+		case "Remove order down":
+			if msg.SenderIP != GetLocalIP() {
+				updateElevatorStatus(msg.SenderIP, msg.Elevator)
+				queue.RemoveRemoteOrder(msg.Elevator.Floor, DOWN)
+			}
+
+		case "Add order up":
+			if msg.SenderIP != msg.TargetIP {
+				queue.AddRemoteOrder(msg.TargetIP, msg.Elevator.ExternalUp, UP)
+			}
+			if msg.SenderIP != GetLocalIP() {
+				updateElevatorStatus(msg.SenderIP, msg.Elevator)
+			}
+
+		case "Add order down":
+			if msg.SenderIP != msg.TargetIP {
+				queue.AddRemoteOrder(msg.TargetIP, msg.Elevator.ExternalDown, DOWN)
+			}
+			if msg.SenderIP != GetLocalIP() {
+				updateElevatorStatus(msg.SenderIP, msg.Elevator)
+			}
+
+		case "Add internal order":
+			if msg.SenderIP != GetLocalIP() {
+				updateElevatorStatus(msg.SenderIP, msg.Elevator)
+			}
+		}
+	}
+}
+
+func updateElevatorStatus(MessageIP string, elevator Elevator) {
+	Elevators[MessageIP].Active = elevator.Active
+	Elevators[MessageIP].Floor = elevator.Floor
+	Elevators[MessageIP].Direction = elevator.Direction
+	Elevators[MessageIP].PrevFloor = elevator.PrevFloor
+	Elevators[MessageIP].FsmState = elevator.FsmState
+
+	for i := 0; i < driver.N_FLOORS; i++ {
+		Elevators[MessageIP].InternalOrders[i] = elevator.InternalOrders[i]
+		Elevators[MessageIP].ExternalUp[i] = elevator.ExternalUp[i]
+		Elevators[MessageIP].ExternalDown[i] = elevator.ExternalDown[i]
+	}
+}
+
+func HeartbeatEventHandler(newElevatorChan chan string, deadElevatorChan chan string) {
+	for {
 		select {
-		case IP := <- newElevatorChan:
+		case IP := <-newElevatorChan:
 			fmt.Println("A new Elevator online:", IP)
 			_, exist := Elevators[IP]
-			if exist{
-				Elevators[IP].Active = true 
+			if exist {
+				Elevators[IP].Active = true
 			} else {
 				fmt.Println("...")
-				//Elevators[IP] :=&Elevator{true, -1, 0, -1, IDLE, {false,false,false,false},{false,false,false,false},{false,false,false,false}}
+				Elevators[IP] = &Elevator{true, -1, 0, -1, IDLE, [driver.N_FLOORS]bool{false, false, false, false}, [driver.N_FLOORS]bool{false, false, false, false}, [driver.N_FLOORS]bool{false, false, false, false}}
 			}
-		case IP := <- deadElevatorChan:
+		case IP := <-deadElevatorChan:
 			fmt.Println("We have lost an elevator:", IP)
 			Elevators[IP].Active = false
 		}
 	}
 }
 
-func ButtonandFloorEventHandler() {
-
-	floorChan := make(chan int)
-	UpOrderChan := make(chan int)
-	DownOrderChan := make(chan int)
-	CommandOrderChan := make(chan int)
-
+func ButtonandFloorEventHandler(floorChan chan int, upOrderChan chan int, downOrderChan chan int, commandOrderChan chan int) {
 
 	go FloorEventCheck(floorChan)
-	go ButtonEventCheck(UpOrderChan, DownOrderChan, CommandOrderChan)
+	go ButtonEventCheck(upOrderChan, downOrderChan, commandOrderChan)
 	PrevDirection := -1
 
 	for {
 		select {
 
 		case floor := <-floorChan:
-			fmt.Println("I do get a floor signal.")
 			dir := Elevators[GetLocalIP()].Direction
 			if floor != -1 {
-				fmt.Println("I do go inside the floor if sentence")
 				Elevators[GetLocalIP()].Floor = floor
 				if queue.ShouldStop(floor, dir) {
-					fmt.Println("Should I stop? yes.")
+					fmt.Println("I should stop at this floor")
 					queue.RemoveOrder(floor, PrevDirection)
 					fsm.GoToDoorOpen()
 				}
@@ -61,7 +107,7 @@ func ButtonandFloorEventHandler() {
 				PrevDirection = dir
 			}
 
-		case floor := <-DownOrderChan:
+		case floor := <-downOrderChan:
 			queue.AddLocalOrder(floor, DOWN)
 			if (Elevators[GetLocalIP()].Direction) != queue.QueueDirection(PrevDirection, Elevators[GetLocalIP()].Floor) {
 				Elevators[GetLocalIP()].Direction = queue.QueueDirection(PrevDirection, Elevators[GetLocalIP()].Floor)
@@ -69,7 +115,9 @@ func ButtonandFloorEventHandler() {
 					fsm.GoToElevating(Elevators[GetLocalIP()].Direction)
 				}
 			}
-		case floor := <-UpOrderChan:
+		// All of the cases below does the same thing with different floor, make a new routine to take care of this.
+		// We do not want duplicate code.
+		case floor := <-upOrderChan:
 			queue.AddLocalOrder(floor, UP)
 			if Elevators[GetLocalIP()].Direction != queue.QueueDirection(PrevDirection, Elevators[GetLocalIP()].Floor) {
 				Elevators[GetLocalIP()].Direction = queue.QueueDirection(PrevDirection, Elevators[GetLocalIP()].Floor)
@@ -77,9 +125,9 @@ func ButtonandFloorEventHandler() {
 					fsm.GoToElevating(Elevators[GetLocalIP()].Direction)
 				}
 			} else {
-				fmt.Println("Failed")
+				fmt.Println("Still in the same floor.")
 			}
-		case floor := <-CommandOrderChan:
+		case floor := <-commandOrderChan:
 			queue.AddLocalOrder(floor, COMMAND)
 			if Elevators[GetLocalIP()].Direction != queue.QueueDirection(PrevDirection, Elevators[GetLocalIP()].Floor) {
 				Elevators[GetLocalIP()].Direction = queue.QueueDirection(PrevDirection, Elevators[GetLocalIP()].Floor)
@@ -118,29 +166,6 @@ func FloorEventCheck(event chan int) {
 		time.Sleep(200 * time.Millisecond)
 	}
 }
-
-/*func ButtonEventCheck(event chan Button_info) {
-	prevButton := button
-	newButton := button
-	fmt.Println(newButton)
-	for {
-		fmt.Println("Inside forever")
-		for f := 0; f < driver.N_FLOORS; f++ {
-			for b := 0; b < driver.N_BUTTONS; b++ {
-				newButton[f][b] = driver.ElevGetButtonSignal(b, f)
-				fmt.Println(newButton, prevButton)
-				if (newButton[f][b] != prevButton[f][b]) && (newButton[f][b] == 1) {
-					prevButton[f][b] = newButton[f][b]
-					var buttonInf Button_info
-					buttonInf.Button = b
-					buttonInf.Floor = f
-					event <- buttonInf
-				}
-			}
-		}
-		time.Sleep(200 * time.Millisecond)
-	}
-}*/
 
 func ButtonEventCheck(UpOrderChan chan int, DownOrderChan chan int, CommandOrderChan chan int) {
 
@@ -313,3 +338,25 @@ func buttonEventCheck(UpOrderChan chan int, DownOrderChan chan int, CommandOrder
 }
 
 */
+/*func ButtonEventCheck(event chan Button_info) {
+	prevButton := button
+	newButton := button
+	fmt.Println(newButton)
+	for {
+		fmt.Println("Inside forever")
+		for f := 0; f < driver.N_FLOORS; f++ {
+			for b := 0; b < driver.N_BUTTONS; b++ {
+				newButton[f][b] = driver.ElevGetButtonSignal(b, f)
+				fmt.Println(newButton, prevButton)
+				if (newButton[f][b] != prevButton[f][b]) && (newButton[f][b] == 1) {
+					prevButton[f][b] = newButton[f][b]
+					var buttonInf Button_info
+					buttonInf.Button = b
+					buttonInf.Floor = f
+					event <- buttonInf
+				}
+			}
+		}
+		time.Sleep(200 * time.Millisecond)
+	}
+}*/

@@ -1,14 +1,14 @@
 package queue
 
 import (
+	. "../definitions"
 	"../driver"
-	."../definitions"
 	"fmt"
 	//"../eventhandler"
-	."../network"
+	. "../network"
 )
 
-const(
+const (
 	N_FLOORS = 4
 )
 
@@ -19,7 +19,7 @@ func ShouldStop(floor, dir int) bool {
 	if dir == 1 {
 		if Elevators[GetLocalIP()].ExternalUp[floor] == true || floor == driver.N_FLOORS-1 {
 			return true
-		} else if QueueDirectionUp(floor){
+		} else if QueueDirectionUp(floor) {
 			return false
 		} else {
 			return true
@@ -36,61 +36,6 @@ func ShouldStop(floor, dir int) bool {
 	return true
 }
 
-
-/*
-func QueueDirectionDown(floor int) int {
-	//Already checked if there are any Elevators in queue and there are
-	check := false
-	if floor == 0 {
-		return 1
-	} else {
-		for i := floor; i >= 0; i-- {
-			if Elevators[GetLocalIP()].InternalOrders[i]  == true || Elevators[GetLocalIP()].ExternalDown[i] == true {
-				check = true
-			}
-		}
-		if check == true {
-			return -1
-		} else {
-			return 1
-		}
-	}
-}
-
-func QueueDirectionUp(floor int) int {
-	check := false
-	if floor == 3 {
-		return -1
-	} else {
-		for i := floor; i < driver.N_FLOORS; i++ {
-			if Elevators[GetLocalIP()].InternalOrders[i]  == true || Elevators[GetLocalIP()].ExternalUp[i] == true {
-				check = true
-			}
-		}
-		if check == true {
-			return 1
-		} else {
-			return -1
-		}
-	}
-}
-/*
-
-func (Elevator *Elevator) QueueDirection(direction, floor int) int {
-	if Elevator.EmptyQueue() == true {
-		return 0
-
-	} else if direction == 1 {
-		return (Elevator.QueueDirectionUp(floor))
-
-	} else if direction == -1 {
-		return (Elevator.QueueDirectionDown(floor))
-	} else {
-		fmt.Println("Something wrong with queue.")
-		return 0
-	}
-}*/
-
 func QueueDirection(direction, floor int) int {
 	if EmptyQueue() == true {
 		return 0
@@ -102,7 +47,7 @@ func QueueDirection(direction, floor int) int {
 			return -1
 		}
 	} else if direction == -1 {
-		if QueueDirectionDown(floor)  {
+		if QueueDirectionDown(floor) {
 			return -1
 		} else if QueueDirectionUp(floor) {
 			return 1
@@ -129,11 +74,38 @@ func QueueDirectionDown(floor int) bool {
 	return false
 }
 
-func RemoveOrder(floor, dir int) {
+func RemoveRemoteOrder(floor int, direction int) {
+	if direction == UP {
+		Elevators[GetLocalIP()].ExternalUp[floor] = false
+		driver.SetButtonLamp(floor, UP, false)
+	} else if direction == DOWN {
+		Elevators[GetLocalIP()].ExternalDown[floor] = false
+		driver.SetButtonLamp(floor, DOWN, false)
+	}
+}
+
+func AddRemoteOrder(IP string, queue [driver.N_FLOORS]bool, direction int) {
+	for i := 0; i < N_FLOORS; i++ {
+		if direction == UP {
+			if !Elevators[IP].ExternalUp[i] && queue[i] {
+				driver.SetButtonLamp(i, UP, true)
+				Elevators[IP].ExternalUp[i] = queue[i]
+			}
+		} else {
+			if !Elevators[IP].ExternalDown[i] && queue[i] {
+				driver.SetButtonLamp(i, DOWN, true)
+				Elevators[IP].ExternalDown[i] = queue[i]
+			}
+		}
+	}
+}
+
+func RemoveOrder(floor int, dir int) {
 	if dir == 1 {
 		Elevators[GetLocalIP()].ExternalUp[floor] = false
 		Elevators[GetLocalIP()].InternalOrders[floor] = false
-		//Send message
+		newMsg := Message{"Remove order up", GetLocalIP(), "", *(Elevators[GetLocalIP()])}
+		BroadcastMessage(newMsg)
 		driver.SetButtonLamp(floor, UP, false)
 		driver.SetButtonLamp(floor, COMMAND, false)
 		fmt.Println("inside remove Elevator with dir == 1")
@@ -144,7 +116,8 @@ func RemoveOrder(floor, dir int) {
 	} else if dir == -1 {
 		Elevators[GetLocalIP()].ExternalDown[floor] = false
 		Elevators[GetLocalIP()].InternalOrders[floor] = false
-		//Send message
+		newMsg := Message{"Remove order down", GetLocalIP(), "", *(Elevators[GetLocalIP()])}
+		BroadcastMessage(newMsg)
 		driver.SetButtonLamp(floor, DOWN, false)
 		driver.SetButtonLamp(floor, COMMAND, false)
 		fmt.Println("inside remove Elevator with dir == -1")
@@ -155,7 +128,6 @@ func RemoveOrder(floor, dir int) {
 			Elevators[GetLocalIP()].ExternalUp[floor] = false
 		}
 	} else {
-		//Send Message
 		Elevators[GetLocalIP()].ExternalDown[floor] = false
 		Elevators[GetLocalIP()].InternalOrders[floor] = false
 		Elevators[GetLocalIP()].ExternalUp[floor] = false
@@ -168,49 +140,53 @@ func RemoveOrder(floor, dir int) {
 
 func AddLocalOrder(floor, buttonType int) {
 	var cheapestElevator string
-	if buttonType != COMMAND{
+	if buttonType != COMMAND {
 		cheapestElevator = findCheapestElevator(floor)
 	}
 	switch buttonType {
 	case UP:
 		Elevators[cheapestElevator].ExternalUp[floor] = true
-		//Send message type "ExternalUpOrderAdded"
+		newMsg := Message{"Add order up", GetLocalIP(), cheapestElevator, *(Elevators[GetLocalIP()])}
+		BroadcastMessage(newMsg)
 		driver.SetButtonLamp(floor, buttonType, true)
 		fmt.Println("Elevator added in ExternalUp queue")
 	case DOWN:
 		Elevators[cheapestElevator].ExternalDown[floor] = true
-		//Send message type "ExternalDownOrderAdded"
+		newMsg := Message{"Add order down", GetLocalIP(), cheapestElevator, *(Elevators[GetLocalIP()])}
+		BroadcastMessage(newMsg)
 		driver.SetButtonLamp(floor, buttonType, true)
 		fmt.Println("Elevator added in ExternalDown queue")
 	case COMMAND:
 		Elevators[GetLocalIP()].InternalOrders[floor] = true
-		//Send message type "lokalOrderAdded"
+		newMsg := Message{"Add internal order", GetLocalIP(), cheapestElevator, *(Elevators[GetLocalIP()])}
+		BroadcastMessage(newMsg)
 		driver.SetButtonLamp(floor, buttonType, true)
 		fmt.Println("New internal order to floor:", floor, " added")
 	}
 }
 
 func findCheapestElevator(floor int) string {
-	/*length := 1 //len(Elevators)
-	var costs[length]int
+	//length := len(Elevators)
+	costs := [5]int{999, 999, 999, 999, 999} // How can we solve this?
+	//var costs []int   //Have to hardcode.. That does not work..
 	i := 0
-	for ip,info := range Elevators {
+	for _, info := range Elevators {
 		costs[i] = calculateOrderCostForOnlyOneElevator(info.Floor, floor, info.Direction)
 		i++
 	}
 	lowestnumber := 0
-	for elev := 1; elev < len(Elevators); elev++{
-		if costs[elev] < costs[lowestnumber]{
+	for elev := 1; elev < len(Elevators); elev++ {
+		if costs[elev] < costs[lowestnumber] {
 			lowestnumber = elev
 		}
 	}
 	j := 0
-	for ip,_ := range Elevators {
-		if j == lowestnumber{
+	for ip, _ := range Elevators {
+		if j == lowestnumber {
 			return ip
 		}
 		j++
-	}*/
+	}
 	return GetLocalIP()
 }
 
@@ -238,7 +214,7 @@ func calculateOrderCostForOnlyOneElevator(currFloor int, orderedFloor int, direc
 		}
 	}
 	return cost
-	
+
 }
 
 func EmptyQueue() bool {
@@ -250,50 +226,3 @@ func EmptyQueue() bool {
 	}
 	return check
 }
-
-/* 
-func MessageReceiver(receivedMsgChan chan Message, sameFloorChan chan int, emptyQueueChan chan int){
-	msg := <- receivedMsgChan
-	switch msg.MessageType {
-		case "IncomingElevator":
-			ElevatorMsgHandler := <- AddElevator(msg.ReceiverIP, msg.Elevator)
-			switch ElevatorMsgHandler {
-				case "empty":
-					emptyQueueChan <- msg.Elevator.Floor
-				case "inSameFloor":
-					sameFloorChan <- msg.Elevator.Floor
-			}
-		case "QueueDirection":
-			elevators[msg.ReceiverIP].Direction = msg.Elevator.Direction
-		case "newFloor":
-			elevators[msg.ReceiverIP].LastPassedFloor = msg.Elevator.Floor //LastPassedFloor er en ny funksjon som må legges til
-			elevators[msg.ReceiverIP].InFloor = true 
-		case "completedElevator":
-			ElevatorCompleted(msg.Elevator.Floor, msg.ReceiverIP)
-	 	case "sendStatus":
-		if message.SenderIP != myIP {
-				_, exist := elevators[message.TargetIP]
-				if !exist {
-					newElev := Elevator{true, true, 1, 0, []bool{false, false, false, false}, []bool{false, false, false, false}, []bool{false, false, false, false}}
-					elevators[message.TargetIP] = &newElev
-				}
-				elevators[message.TargetIP].InFloor = message.Elevator.InFloor
-				elevators[message.TargetIP].LastPassedFloor = message.Elevator.LastPassedFloor
-				elevators[message.TargetIP].Direction = message.Elevator.Direction
-
-				for floor := 0; floor < N_FLOORS; floor++ {
-					elevators[message.TargetIP].UpElevators[floor] = elevators[message.TargetIP].UpElevators[floor] || message.Elevator.UpElevators[floor]
-					elevators[message.TargetIP].DownElevators[floor] = elevators[message.TargetIP].DownElevators[floor] || message.Elevator.DownElevators[floor]
-					elevators[message.TargetIP].CommandElevators[floor] = elevators[message.TargetIP].CommandElevators[floor] || message.Elevator.CommandElevators[floor]
-				}
-				ElevatorInEmptyQueueChan <- 1
-				lightUpdateChan <- 1
-			}
-
-		case "leftFloor":
-			fmt.Printf("Heis %s har forlatt etasjen:\n", message.TargetIP)
-			LeftFloor(message.TargetIP)
-		}
-	}
-}
-*/

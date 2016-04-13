@@ -1,12 +1,13 @@
 package main
 
 import (
-	."./driver"
-	."./eventhandler"
+	. "./driver"
+	. "./eventhandler"
 	"./fsm"
 	//"./queue"
+	. "./definitions"
+	. "./network"
 	"fmt"
-	."./network"
 	//"./transManager.go"
 	//"time"
 )
@@ -14,17 +15,31 @@ import (
 func main() {
 
 	//Initzialization of elevator Hardware and fsm.
-	if Init() == 0 {
+	/*if Init() == 0 {
 		fmt.Println("The elevator was not able to initialize")
-	}
+	}*/
 	if Init() == 1 {
 		fmt.Println("The elevator was able to initialize")
+	} else {
+		fmt.Println("The elevator was not able to initialize")
 	}
 	fsm.InitFsm()
 
+	floorChan := make(chan int)
+	upOrderChan := make(chan int)
+	downOrderChan := make(chan int)
+	commandOrderChan := make(chan int)
+	messageReciveChan := make(chan Message)
 
-	go ButtonandFloorEventHandler()
+	// Handels floor and button events: Does whatever needs to be done when buttons are pushed or floors are reached
+	go ButtonandFloorEventHandler(floorChan, upOrderChan, downOrderChan, commandOrderChan)
 
+	// Handels incoming and outgoing messages
+	go MessageReciever(messageReciveChan)
+	go MessageTypeHandler(messageReciveChan, floorChan, upOrderChan, downOrderChan, commandOrderChan)
+	go MessageBroadcast(MessageBroadcastChan)
+
+	// Handels heartbeats, finds new elevator and tell us continuly wether they ar alive or dead.
 	newElevatorChan := make(chan string)
 	deadElevatorChan := make(chan string)
 	go HeartbeatEventCheck(newElevatorChan, deadElevatorChan)
@@ -32,6 +47,6 @@ func main() {
 	go SendHeartBeat()
 
 	alwaysOnChan := make(chan string)
-	<- alwaysOnChan
-	
+	<-alwaysOnChan
+
 }

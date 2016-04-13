@@ -9,7 +9,6 @@ import (
     "builtin"
 )
 
-var elevators = map[string]*Elevator{}
 
 func messageTransmitter(msgType string, targetIP string, order Order) { 
 	newMessage := Message{
@@ -120,7 +119,25 @@ func MessageReceiver(incommingMsgChan chan Message, orderOnSameFloorChan chan in
 	}
 }
 
-func HeartbeatReceiver(newElevatorChan chan string, deadElevatorChan chan string) {
+
+
+func Init(){
+	runtime.GOMAXPROCS(runtime.NumCPU()) //sets the number of cpu cores the program can use simultaneously.
+	//sets it here to Numcpu which is the number of cores available. 
+	
+	receiveChan := make(chan Message)
+	go MessageTRX(receiveChan)
+    go queue.MessageReceiver(receiveChan, orderOnSameFloorChan, orderInEmptyQueueChan)
+	
+	time.Sleep(time.Second*5)
+}
+
+
+
+
+
+
+/*func HeartbeatReceiver(newElevatorChan chan string, deadElevatorChan chan string) {
 	for {
 		select {
 		case IP := <-newElevatorChan:
@@ -145,23 +162,4 @@ func HeartbeatReceiver(newElevatorChan chan string, deadElevatorChan chan string
 			fmt.Printf("Det er fjernet en heis med IP: %s\n", IP)
 		}
 	}
-}
-
-func Init(){
-	runtime.GOMAXPROCS(runtime.NumCPU()) //sets the number of cpu cores the program can use simultaneously.
-	//sets it here to Numcpu which is the number of cores available. 
- 
-	orderOnSameFloorChan := make(chan int)
-	orderInEmptyQueueChan := make(chan int)
- 
-	newElevatorChan := make(chan string)
-	deadElevatorChan := make(chan string)
-	go HeartbeatTRX(newElevatorChan, deadElevatorChan)
-	go HeartbeatReceiver(newElevatorChan, deadElevatorChan)
-	
-	receiveChan := make(chan Message)
-	go MessageTRX(receiveChan)
-    go queue.MessageReceiver(receiveChan, orderOnSameFloorChan, orderInEmptyQueueChan)
-	
-	time.Sleep(time.Second*5)
-}
+}*/
