@@ -109,7 +109,6 @@ func RemoveOrder(floor int, dir int) {
 		BroadcastMessage(newMsg)
 		driver.SetButtonLamp(floor, UP, false)
 		driver.SetButtonLamp(floor, COMMAND, false)
-		fmt.Println("inside remove Elevator with dir == 1")
 		if floor == 3 {
 			Elevators[GetLocalIP()].ExternalDown[floor] = false
 			driver.SetButtonLamp(floor, DOWN, false)
@@ -121,10 +120,8 @@ func RemoveOrder(floor int, dir int) {
 		BroadcastMessage(newMsg)
 		driver.SetButtonLamp(floor, DOWN, false)
 		driver.SetButtonLamp(floor, COMMAND, false)
-		fmt.Println("inside remove Elevator with dir == -1")
 		fmt.Println(floor)
 		if floor == 0 {
-			fmt.Println("Inside here?")
 			driver.SetButtonLamp(floor, UP, false)
 			Elevators[GetLocalIP()].ExternalUp[floor] = false
 		}
@@ -174,7 +171,9 @@ func findCheapestElevator(floor int) string {
 	for _, info := range Elevators {
 		costs[i] = calculateOrderCostForOnlyOneElevator(info.Floor, floor, info.Direction)
 		i++
+		fmt.Println("Cost for order:", calculateOrderCostForOnlyOneElevator(info.Floor, floor, info.Direction))
 	}
+	fmt.Println(costs)
 	lowestnumber := 0
 	for elev := 1; elev < len(Elevators); elev++ {
 		if costs[elev] < costs[lowestnumber] {
@@ -184,6 +183,7 @@ func findCheapestElevator(floor int) string {
 	j := 0
 	for ip, _ := range Elevators {
 		if j == lowestnumber {
+			fmt.Println(ip)
 			return ip
 		}
 		j++

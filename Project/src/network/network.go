@@ -95,7 +95,7 @@ func HeartbeatEventCheck(newElevatorChan chan string, deadElevatorChan chan stri
 		for i, t := range heartbeats {
 			dur := time.Since(*t)
 			if dur.Seconds() > 1 {
-				fmt.Println("Waring:", dur)
+				fmt.Println("Warning:", dur)
 				deadElevatorChan <- i
 				delete(heartbeats, i)
 			}

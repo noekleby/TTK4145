@@ -29,6 +29,7 @@ func MessageTypeHandler(messageReciveChan chan Message, floorChan chan int, upOr
 			}
 
 		case "Add order up":
+			fmt.Println("Hi!")
 			if msg.SenderIP != msg.TargetIP {
 				queue.AddRemoteOrder(msg.TargetIP, msg.Elevator.ExternalUp, UP)
 			}
@@ -99,7 +100,6 @@ func ButtonandFloorEventHandler(floorChan chan int, upOrderChan chan int, downOr
 			if floor != -1 {
 				Elevators[GetLocalIP()].Floor = floor
 				if queue.ShouldStop(floor, dir) {
-					fmt.Println("I should stop at this floor")
 					queue.RemoveOrder(floor, PrevDirection)
 					fsm.GoToDoorOpen()
 				}
