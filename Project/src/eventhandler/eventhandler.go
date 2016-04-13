@@ -75,7 +75,7 @@ func HeartbeatEventHandler(newElevatorChan chan string, deadElevatorChan chan st
 			if exist {
 				Elevators[IP].Active = true
 			} else {
-				fmt.Println("...")
+				fmt.Println("Meeting new elevator")
 				Elevators[IP] = &Elevator{true, -1, 0, -1, IDLE, [driver.N_FLOORS]bool{false, false, false, false}, [driver.N_FLOORS]bool{false, false, false, false}, [driver.N_FLOORS]bool{false, false, false, false}}
 			}
 		case IP := <-deadElevatorChan:

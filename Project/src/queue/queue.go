@@ -13,6 +13,7 @@ const (
 )
 
 func ShouldStop(floor, dir int) bool {
+	fmt.Println(Elevators[GetLocalIP()].ExternalUp[], Elevators[GetLocalIP()].InternalOrders[], Elevators[GetLocalIP()].ExternalDown[])
 	if Elevators[GetLocalIP()].InternalOrders[floor] == true {
 		return true
 	}
