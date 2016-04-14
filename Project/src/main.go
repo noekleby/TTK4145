@@ -11,6 +11,7 @@ import (
 
 func main() {
 
+	//Initializes all elevators.
 	if Init() == 1 {
 		fmt.Println("The elevator was able to initialize")
 	} else {
@@ -31,7 +32,7 @@ func main() {
 	go MessageTypeHandler(messageReciveChan, floorChan, buttonChan)
 	go MessageBroadcast(MessageBroadcastChan)
 
-	// Handels heartbeats, finds new elevator and tell us continuly wether they ar alive or dead.
+	// Handels heartbeats, finds new elevators, tells us wether known elevators are dead or alive.
 	newElevatorChan := make(chan string)
 	deadElevatorChan := make(chan string)
 	go HeartbeatEventCheck(newElevatorChan, deadElevatorChan)

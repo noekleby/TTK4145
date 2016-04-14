@@ -140,12 +140,10 @@ func GetDirection() int {
 	return ioReadBit(MOTORDIR)
 }
 
-
-//We do not need this: 
+//We do not need this:
 /*func ElevGetStopSignal() int {
 	return (ioReadBit(STOP))
 }
 func ElevGetObstructionSignal() int {
 	return (ioReadBit(OBSTRUCTION))
 }*/
-

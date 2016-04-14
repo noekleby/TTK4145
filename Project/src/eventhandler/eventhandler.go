@@ -35,8 +35,10 @@ func MessageTypeHandler(messageReciveChan chan Message, floorChan chan int, butt
 			if msg.SenderIP != GetLocalIP() {
 				updateElevatorStatus(msg.SenderIP, msg.Elevator)
 			}
-			if msg.TargetIP == GetLocalIP() {
+			if msg.SenderIP == GetLocalIP() {
 				msg.Order.FromIP = GetLocalIP()
+			}
+			if msg.TargetIP == GetLocalIP() {
 				buttonChan <- msg.Order
 			}
 		}
