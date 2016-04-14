@@ -46,10 +46,12 @@ func MessageTypeHandler(messageReciveChan chan Message, floorChan chan int, butt
 			//if msg.SenderIP != GetLocalIP() {
 			if msg.Order.Buttontype == UP {
 				Elevators[msg.TargetIP].ExternalUp[msg.Order.Floor] = true
-				driver.SetButtonLamp(msg.Order.Floor, UP, true)
+				//driver.SetButtonLamp(msg.Order.Floor, UP, true)
+				lightEventChan <- 1
 			} else if msg.Order.Buttontype == DOWN {
 				Elevators[msg.TargetIP].ExternalDown[msg.Order.Floor] = true
-				driver.SetButtonLamp(msg.Order.Floor, DOWN, true)
+				lightEventChan <- 1
+				//driver.SetButtonLamp(msg.Order.Floor, DOWN, true)
 			} else {
 				Elevators[msg.TargetIP].InternalOrders[msg.Order.Floor] = true
 			}
