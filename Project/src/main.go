@@ -1,29 +1,22 @@
 package main
 
 import (
+	"fmt"
 	. "./driver"
 	. "./eventhandler"
-	"./fsm"
-	//"./queue"
+	. "./fsm"
 	. "./definitions"
-	. "./network"
-	"fmt"
-	//"./transManager.go"
-	//"time"
+	. "./network"	
 )
 
 func main() {
 
-	//Initzialization of elevator Hardware and fsm.
-	/*if Init() == 0 {
-		fmt.Println("The elevator was not able to initialize")
-	}*/
 	if Init() == 1 {
 		fmt.Println("The elevator was able to initialize")
 	} else {
 		fmt.Println("The elevator was not able to initialize")
 	}
-	fsm.InitFsm()
+	InitFsm()
 
 	floorChan := make(chan int)
 	upOrderChan := make(chan int)
@@ -46,7 +39,7 @@ func main() {
 	go HeartbeatEventHandler(newElevatorChan, deadElevatorChan)
 	go SendHeartBeat()
 
-	alwaysOnChan := make(chan string)
-	<-alwaysOnChan
+	KeepElevatorGoingChan := make(chan string)
+	<-KeepElevatorGoingChan
 
 }

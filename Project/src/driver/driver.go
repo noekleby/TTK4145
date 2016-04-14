@@ -136,13 +136,16 @@ func ElevGetButtonSignal(button int, floor int) int {
 	}
 }
 
-func ElevGetStopSignal() int {
+func GetDirection() int {
+	return ioReadBit(MOTORDIR)
+}
+
+
+//We do not need this: 
+/*func ElevGetStopSignal() int {
 	return (ioReadBit(STOP))
 }
 func ElevGetObstructionSignal() int {
 	return (ioReadBit(OBSTRUCTION))
-}
+}*/
 
-func GetDirection() int {
-	return ioReadBit(MOTORDIR)
-}

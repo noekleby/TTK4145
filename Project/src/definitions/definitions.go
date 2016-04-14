@@ -20,7 +20,10 @@ const (
 	ELEVATING
 	DOOR_OPEN
 )
-
+const (
+	HeartBeatPort = 30113
+	BroadcastPort = 30215
+)
 var Elevators = map[string]*Elevator{}
 var MessageBroadcastChan = make(chan Message)
 

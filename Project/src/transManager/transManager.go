@@ -10,7 +10,7 @@ import (
 )
 
 
-func messageTransmitter(msgType string, targetIP string, order Order) { 
+/*func messageTransmitter(msgType string, targetIP string, order Order) { 
 	newMessage := Message{
 		msgType,
 		senderIP,
@@ -19,7 +19,7 @@ func messageTransmitter(msgType string, targetIP string, order Order) {
 		order,
 	}
 	network.BroadcastMessage(newMessage)
-}
+}*/
 
 func MessageTRX(receiveChan chan Message) {
 
