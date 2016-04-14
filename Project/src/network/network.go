@@ -9,8 +9,6 @@ import (
 	"time"
 )
 
-
-
 func BroadcastMessage(message Message) {
 	printMessage(message)
 	MessageBroadcastChan <- message
@@ -19,16 +17,16 @@ func BroadcastMessage(message Message) {
 func printMessage(message Message) {
 	fmt.Println("This message is being sent from elevator with IP: ", message.SenderIP, "\n")
 	fmt.Println("MessageType: ", message.MessageType, "\n")
-	fmt.Println("Target IP: ", message.TargetIP ,"\n")
-	fmt.Println("Active: ", message.Elevator.Active ,"\n")
-	fmt.Println("Floor: ", message.Elevator.Floor ,"\n")
-	fmt.Println("Direction: ", message.Elevator.Direction ,"\n")
-	fmt.Println("PrevFloor: ", message.Elevator.PrevFloor ,"\n")
-	fmt.Println("FsmState: ", message.Elevator.FsmState,"\n")
-	fmt.Println("Internal Orders: ", message.Elevator.InternalOrders,"\n")
-	fmt.Println("External Up Orders: ", message.Elevator.ExternalUp,"\n")
-	fmt.Println("External down orders: ", message.Elevator.ExternalDown,"\n")
-	
+	fmt.Println("Target IP: ", message.TargetIP, "\n")
+	fmt.Println("Active: ", message.Elevator.Active, "\n")
+	fmt.Println("Floor: ", message.Elevator.Floor, "\n")
+	fmt.Println("Direction: ", message.Elevator.Direction, "\n")
+	fmt.Println("FsmState: ", message.Elevator.FsmState, "\n")
+	fmt.Println("Internal Orders: ", message.Elevator.InternalOrders, "\n")
+	fmt.Println("External Up Orders: ", message.Elevator.ExternalUp, "\n")
+	fmt.Println("External down orders: ", message.Elevator.ExternalDown, "\n")
+	fmt.Println("Order: ", message.Order, "\n")
+
 }
 
 func MessageReciever(messageRecieveChan chan Message) {

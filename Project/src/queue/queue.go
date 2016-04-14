@@ -102,10 +102,11 @@ func AddRemoteOrder(IP string, queue [driver.N_FLOORS]bool, direction int) {
 }
 
 func RemoveOrder(floor int, dir int) {
+	order := Order{-1, -1}
 	if dir == 1 {
 		Elevators[GetLocalIP()].ExternalUp[floor] = false
 		Elevators[GetLocalIP()].InternalOrders[floor] = false
-		newMsg := Message{"Remove order up", GetLocalIP(), "", *(Elevators[GetLocalIP()])}
+		newMsg := Message{"Remove order up", GetLocalIP(), "", *(Elevators[GetLocalIP()]), order}
 		BroadcastMessage(newMsg)
 		driver.SetButtonLamp(floor, UP, false)
 		driver.SetButtonLamp(floor, COMMAND, false)
@@ -116,7 +117,7 @@ func RemoveOrder(floor int, dir int) {
 	} else if dir == -1 {
 		Elevators[GetLocalIP()].ExternalDown[floor] = false
 		Elevators[GetLocalIP()].InternalOrders[floor] = false
-		newMsg := Message{"Remove order down", GetLocalIP(), "", *(Elevators[GetLocalIP()])}
+		newMsg := Message{"Remove order down", GetLocalIP(), "", *(Elevators[GetLocalIP()]), order}
 		BroadcastMessage(newMsg)
 		driver.SetButtonLamp(floor, DOWN, false)
 		driver.SetButtonLamp(floor, COMMAND, false)
@@ -136,32 +137,32 @@ func RemoveOrder(floor int, dir int) {
 
 }
 
-func AddLocalOrder(floor, buttonType int) {
+func AddLocalOrder(order Order) {
 	var cheapestElevator string
-	if buttonType != COMMAND {
-		cheapestElevator = findCheapestElevator(floor)
+	if order.Buttontype != COMMAND {
+		cheapestElevator = findCheapestElevator(order.Floor)
 		//cheapestElevator = "129.241.187.26"
 		//fmt.Println("Inside addLocalOrder: ", cheapestElevator)
 	}
-	switch buttonType {
+	switch order.Buttontype {
 	case UP:
-		Elevators[cheapestElevator].ExternalUp[floor] = true
-		newMsg := Message{"Add order up", GetLocalIP(), cheapestElevator, *(Elevators[GetLocalIP()])}
+		Elevators[cheapestElevator].ExternalUp[order.Floor] = true
+		newMsg := Message{"Add order", GetLocalIP(), cheapestElevator, *(Elevators[GetLocalIP()]), order}
 		BroadcastMessage(newMsg)
-		driver.SetButtonLamp(floor, buttonType, true)
+		driver.SetButtonLamp(order.Floor, order.Buttontype, true)
 		fmt.Println("Elevator added in ExternalUp queue")
 	case DOWN:
-		Elevators[cheapestElevator].ExternalDown[floor] = true
-		newMsg := Message{"Add order down", GetLocalIP(), cheapestElevator, *(Elevators[GetLocalIP()])}
+		Elevators[cheapestElevator].ExternalDown[order.Floor] = true
+		newMsg := Message{"Add order", GetLocalIP(), cheapestElevator, *(Elevators[GetLocalIP()]), order}
 		BroadcastMessage(newMsg)
-		driver.SetButtonLamp(floor, buttonType, true)
+		driver.SetButtonLamp(order.Floor, order.Buttontype, true)
 		fmt.Println("Elevator added in ExternalDown queue")
 	case COMMAND:
-		Elevators[GetLocalIP()].InternalOrders[floor] = true
-		newMsg := Message{"Add internal order", GetLocalIP(), cheapestElevator, *(Elevators[GetLocalIP()])}
+		Elevators[GetLocalIP()].InternalOrders[order.Floor] = true
+		newMsg := Message{"Add order", GetLocalIP(), cheapestElevator, *(Elevators[GetLocalIP()]), order}
 		BroadcastMessage(newMsg)
-		driver.SetButtonLamp(floor, buttonType, true)
-		fmt.Println("New internal order to floor:", floor, " added")
+		driver.SetButtonLamp(order.Floor, order.Buttontype, true)
+		fmt.Println("New internal order to floor:", order.Floor, " added")
 	}
 }
 

@@ -1,21 +1,20 @@
 package fsm
 
 import (
+	. "../definitions"
 	"../driver"
-	."../definitions"
+	. "../network"
 	"fmt"
 	"time"
-	."../network"
 )
 
 //Initializing FSM
 func InitFsm() {
 	fmt.Println("Currently initializin fsm going to state: IDLE")
-	Elevators[GetLocalIP()] = &Elevator{true, 0, 0, -1, IDLE,[4]bool{false,false,false,false},[4]bool{false,false,false,false},[4]bool{false,false,false,false}}
+	Elevators[GetLocalIP()] = &Elevator{true, 0, 0, IDLE, [4]bool{false, false, false, false}, [4]bool{false, false, false, false}, [4]bool{false, false, false, false}}
 }
 
-
-func GoToIDLE() { 
+func GoToIDLE() {
 	driver.StopElevate()
 	Elevators[GetLocalIP()].FsmState = IDLE
 	Elevators[GetLocalIP()].Direction = 0

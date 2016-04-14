@@ -24,6 +24,7 @@ const (
 	HeartBeatPort = 30113
 	BroadcastPort = 30215
 )
+
 var Elevators = map[string]*Elevator{}
 var MessageBroadcastChan = make(chan Message)
 
@@ -37,15 +38,20 @@ type Message struct {
 	SenderIP    string
 	TargetIP    string //Cheapest Elevator
 	Elevator    Elevator
+	Order       Order
 }
 
 type Elevator struct {
 	Active         bool
 	Floor          int
 	Direction      int
-	PrevFloor      int
 	FsmState       int
 	InternalOrders [N_FLOORS]bool
 	ExternalUp     [N_FLOORS]bool
 	ExternalDown   [N_FLOORS]bool
+}
+
+type Order struct {
+	Buttontype int
+	Floor      int
 }
