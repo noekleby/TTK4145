@@ -36,6 +36,7 @@ func MessageTypeHandler(messageReciveChan chan Message, floorChan chan int, butt
 				updateElevatorStatus(msg.SenderIP, msg.Elevator)
 			}
 			if msg.TargetIP == GetLocalIP() {
+				msg.Order.FromIP = GetLocalIP()
 				buttonChan <- msg.Order
 			}
 		}
@@ -102,8 +103,6 @@ func ButtonandFloorEventHandler(floorChan chan int, buttonChan chan Order) {
 				if Elevators[GetLocalIP()].Direction != 0 {
 					fsm.GoToElevating(Elevators[GetLocalIP()].Direction)
 				}
-			} else {
-				fmt.Println("Still in the same floor.")
 			}
 		default:
 			switch Elevators[GetLocalIP()].FsmState {
@@ -153,7 +152,7 @@ func ButtonEventCheck(buttonChan chan Order) {
 					buttonPressed[floor][buttonType] = true
 					order.Buttontype = buttonType
 					order.Floor = floor
-					order.FromIP = GetLocalIP()
+					order.FromIP = ""
 					buttonChan <- order
 				} else if buttonPressed[floor][buttonType] {
 					buttonPressed[floor][buttonType] = false

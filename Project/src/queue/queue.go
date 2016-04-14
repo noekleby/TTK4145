@@ -119,7 +119,6 @@ func RemoveOrder(floor int, dir int) {
 		BroadcastMessage(newMsg)
 		driver.SetButtonLamp(floor, DOWN, false)
 		driver.SetButtonLamp(floor, COMMAND, false)
-		fmt.Println(floor)
 		if floor == 0 {
 			driver.SetButtonLamp(floor, UP, false)
 			Elevators[GetLocalIP()].ExternalUp[floor] = false
