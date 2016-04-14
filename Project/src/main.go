@@ -22,10 +22,12 @@ func main() {
 	floorChan := make(chan int)
 	buttonChan := make(chan Order)
 	messageReciveChan := make(chan Message)
+	lightEventChan := make(chan int)
 
 	// Handels floor and button events: Does whatever needs to be done when buttons are pushed or floors are reached
 	// This includes floorpanel from both local and other elevators, elevatorpanel from local elevator and floor events on local elevator.
-	go ButtonandFloorEventHandler(floorChan, buttonChan)
+	go ButtonandFloorEventHandler(floorChan, buttonChan, lightEventChan)
+	go LampHandler(lightEventChan)
 
 	// Handels incoming and outgoing messages and what needs to be done when they get one.
 	go MessageReciever(messageReciveChan)

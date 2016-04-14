@@ -28,8 +28,8 @@ func GetLocalIP() string {
 //------------Message-------------------------------------------------------------------------------------------------------------
 
 func BroadcastMessage(message Message) {
-	fmt.Println("\nBroadcasting:")
-	printMessage(message)
+	//fmt.Println("\nBroadcasting:")
+	//printMessage(message)
 	MessageBroadcastChan <- message
 }
 
@@ -67,8 +67,8 @@ func MessageReciever(messageRecieveChan chan Message) {
 			time.Sleep((4 * time.Second))
 		}
 		if msg.SenderIP != GetLocalIP() {
-			fmt.Println("Receiving: ")
-			printMessage(msg)
+			//fmt.Println("Receiving: ")
+			//printMessage(msg)
 			messageRecieveChan <- msg
 		}
 	}

@@ -140,6 +140,14 @@ func GetDirection() int {
 	return ioReadBit(MOTORDIR)
 }
 
+func ElevGetLampSignal(button int, floor int) int {
+	if floor < 0 || floor >= N_FLOORS || button < 0 || button >= N_BUTTONS {
+		return 0
+	} else {
+		return ioReadBit(lamp_channel_matrix[floor][button])
+	}
+}
+
 //We do not need this:
 /*func ElevGetStopSignal() int {
 	return (ioReadBit(STOP))

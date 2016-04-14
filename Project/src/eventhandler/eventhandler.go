@@ -41,7 +41,6 @@ func MessageTypeHandler(messageReciveChan chan Message, floorChan chan int, butt
 			//}
 
 		case "Add order":
-			fmt.Println("In MessageTypeHandler, Add order")
 			//if msg.SenderIP != GetLocalIP() {
 			if msg.Order.Buttontype == UP {
 				Elevators[msg.TargetIP].ExternalUp[msg.Order.Floor] = true
@@ -118,7 +117,7 @@ func HeartbeatEventHandler(newElevatorChan chan string, deadElevatorChan chan st
 	}
 }
 
-func ButtonandFloorEventHandler(floorChan chan int, buttonChan chan Order) {
+func ButtonandFloorEventHandler(floorChan chan int, buttonChan chan Order, lightEventChan chan int) {
 
 	go FloorEventCheck(floorChan)
 	go ButtonEventCheck(buttonChan)
@@ -132,7 +131,7 @@ func ButtonandFloorEventHandler(floorChan chan int, buttonChan chan Order) {
 			if floor != -1 {
 				Elevators[GetLocalIP()].Floor = floor
 				if queue.ShouldStop(floor, dir) {
-					queue.RemoveOrder(floor, PrevDirection)
+					queue.RemoveOrder(floor, PrevDirection, lightEventChan)
 					fsm.GoToDoorOpen()
 				}
 			} else {
@@ -140,7 +139,7 @@ func ButtonandFloorEventHandler(floorChan chan int, buttonChan chan Order) {
 			}
 
 		case order := <-buttonChan:
-			queue.AddLocalOrder(order)
+			queue.AddLocalOrder(order, lightEventChan)
 			if (Elevators[GetLocalIP()].Direction) != queue.QueueDirection(PrevDirection, Elevators[GetLocalIP()].Floor) {
 				Elevators[GetLocalIP()].Direction = queue.QueueDirection(PrevDirection, Elevators[GetLocalIP()].Floor)
 				if Elevators[GetLocalIP()].Direction != 0 {
@@ -155,7 +154,7 @@ func ButtonandFloorEventHandler(floorChan chan int, buttonChan chan Order) {
 					fsm.GoToIDLE()
 				} else if direction == 0 && !queue.EmptyQueue() {
 					fsm.GoToDoorOpen()
-					queue.RemoveOrder(Elevators[GetLocalIP()].Floor, 0)
+					queue.RemoveOrder(Elevators[GetLocalIP()].Floor, 0, lightEventChan)
 				} else {
 					fsm.GoToElevating(direction)
 				}
@@ -222,3 +221,46 @@ func ButtonEventCheck(buttonChan chan Order) {
 				}
 
 */
+func LampHandler(lightEventChan chan int) {
+	InternalLamp := make([]bool, driver.N_FLOORS)
+	ExternalUpLamp := make([]bool, driver.N_FLOORS)
+	ExternalDownLamp := make([]bool, driver.N_FLOORS)
+
+	for {
+		<-lightEventChan
+		for floor := 0; floor < driver.N_FLOORS; floor++ {
+			for IP, _ := range Elevators {
+				if Elevators[GetLocalIP()].InternalOrders[floor] {
+					InternalLamp[floor] = true
+				}
+				if Elevators[IP].ExternalUp[floor] {
+					ExternalUpLamp[floor] = true
+				}
+				if Elevators[IP].ExternalDown[floor] {
+					ExternalDownLamp[floor] = true
+				}
+			}
+		}
+		for floor := 0; floor < driver.N_FLOORS; floor++ {
+			if floor > 0 && ExternalDownLamp[floor] {
+				driver.SetButtonLamp(floor, DOWN, true)
+			} else {
+				driver.SetButtonLamp(floor, DOWN, false)
+			}
+			if floor < driver.N_FLOORS-1 && ExternalUpLamp[floor] {
+				driver.SetButtonLamp(floor, UP, true)
+			} else {
+				driver.SetButtonLamp(floor, UP, false)
+			}
+			if InternalLamp[floor] {
+				driver.SetButtonLamp(floor, COMMAND, true)
+			} else {
+				driver.SetButtonLamp(floor, COMMAND, false)
+			}
+			InternalLamp[floor] = false
+			ExternalUpLamp[floor] = false
+			ExternalDownLamp[floor] = false
+
+		}
+	}
+}
