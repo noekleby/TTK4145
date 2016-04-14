@@ -19,14 +19,25 @@ func MessageTypeHandler(messageReciveChan chan Message, floorChan chan int, butt
 		case "Remove order up":
 			fmt.Println("In MessageTypeHandler, Remove order up")
 			if msg.SenderIP != GetLocalIP() {
-				updateElevatorStatus(msg.SenderIP, msg.Elevator)
-				queue.RemoveRemoteOrder(msg.Elevator.Floor, UP)
+				driver.SetButtonLamp(msg.Elevator.Floor, UP, false)
+				Elevators[msg.SenderIP].ExternalUp[msg.Elevator.Floor] = false
+				Elevators[msg.SenderIP].Floor = msg.Elevator.Floor
+				Elevators[msg.SenderIP].Direction = 1
+
+				//Originalen
+				/*updateElevatorStatus(msg.SenderIP, msg.Elevator)
+				queue.RemoveRemoteOrder(msg.Elevator.Floor, UP)*/
 			}
 
 		case "Remove order down":
 			if msg.SenderIP != GetLocalIP() {
-				updateElevatorStatus(msg.SenderIP, msg.Elevator)
-				queue.RemoveRemoteOrder(msg.Elevator.Floor, DOWN)
+				driver.SetButtonLamp(msg.Elevator.Floor, DOWN, false)
+				Elevators[msg.SenderIP].ExternalDown[msg.Elevator.Floor] = false
+				Elevators[msg.SenderIP].Floor = msg.Elevator.Floor
+				Elevators[msg.SenderIP].Direction = -1
+				//Original
+				/*updateElevatorStatus(msg.SenderIP, msg.Elevator)
+				queue.RemoveRemoteOrder(msg.Elevator.Floor, DOWN)*/
 			}
 
 		case "Add order":
