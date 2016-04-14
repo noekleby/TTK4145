@@ -42,14 +42,13 @@ type Message struct {
 }
 
 type Elevator struct {
-	Active                      bool
-	Floor                       int
-	Direction                   int
-	FsmState                    int
-	CompletingOrdersForElevator string
-	InternalOrders              [N_FLOORS]bool
-	ExternalUp                  [N_FLOORS]bool
-	ExternalDown                [N_FLOORS]bool
+	Active         bool
+	Floor          int
+	Direction      int
+	FsmState       int
+	InternalOrders [N_FLOORS]bool
+	ExternalUp     [N_FLOORS]bool
+	ExternalDown   [N_FLOORS]bool
 }
 
 type Order struct {

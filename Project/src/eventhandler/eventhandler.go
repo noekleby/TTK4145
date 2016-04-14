@@ -17,6 +17,7 @@ func MessageTypeHandler(messageReciveChan chan Message, floorChan chan int, butt
 		switch msg.MessageType {
 
 		case "Remove order up":
+			fmt.Println("In MessageTypeHandler, Remove order up")
 			if msg.SenderIP != GetLocalIP() {
 				updateElevatorStatus(msg.SenderIP, msg.Elevator)
 				queue.RemoveRemoteOrder(msg.Elevator.Floor, UP)
@@ -29,6 +30,7 @@ func MessageTypeHandler(messageReciveChan chan Message, floorChan chan int, butt
 			}
 
 		case "Add order":
+			fmt.Println("In MessageTypeHandler, Add order")
 			if (msg.SenderIP != msg.TargetIP) && (msg.SenderIP != GetLocalIP()) {
 				queue.AddRemoteOrder(msg.TargetIP, msg.Elevator, msg.Order)
 			}
@@ -68,7 +70,7 @@ func HeartbeatEventHandler(newElevatorChan chan string, deadElevatorChan chan st
 				Elevators[IP].Active = true
 			} else {
 				fmt.Println("Meeting new elevator")
-				Elevators[IP] = &Elevator{true, -1, 0, IDLE, IP, [driver.N_FLOORS]bool{false, false, false, false}, [driver.N_FLOORS]bool{false, false, false, false}, [driver.N_FLOORS]bool{false, false, false, false}}
+				Elevators[IP] = &Elevator{true, -1, 0, IDLE, [driver.N_FLOORS]bool{false, false, false, false}, [driver.N_FLOORS]bool{false, false, false, false}, [driver.N_FLOORS]bool{false, false, false, false}}
 			}
 		case IP := <-deadElevatorChan:
 			fmt.Println("We have lost an elevator:", IP)
@@ -100,8 +102,8 @@ func ButtonandFloorEventHandler(floorChan chan int, buttonChan chan Order) {
 
 		case order := <-buttonChan:
 			queue.AddLocalOrder(order)
-			if (Elevators[GetLocalIP()].Direction) != queue.QueueDirection(PrevDirection, Elevators[GetLocalIP()].Floor, GetLocalIP()) {
-				Elevators[GetLocalIP()].Direction = queue.QueueDirection(PrevDirection, Elevators[GetLocalIP()].Floor, GetLocalIP())
+			if (Elevators[GetLocalIP()].Direction) != queue.QueueDirection(PrevDirection, Elevators[GetLocalIP()].Floor) {
+				Elevators[GetLocalIP()].Direction = queue.QueueDirection(PrevDirection, Elevators[GetLocalIP()].Floor)
 				if Elevators[GetLocalIP()].Direction != 0 {
 					fsm.GoToElevating(Elevators[GetLocalIP()].Direction)
 				}
@@ -109,25 +111,13 @@ func ButtonandFloorEventHandler(floorChan chan int, buttonChan chan Order) {
 		default:
 			switch Elevators[GetLocalIP()].FsmState {
 			case IDLE:
-				direction := queue.QueueDirection(PrevDirection, Elevators[GetLocalIP()].Floor, GetLocalIP())
-				if direction == 0 && queue.EmptyQueue(GetLocalIP()) {
-					thisIpGotOrders := ""
-					for IP, _ := range Elevators {
-						if !queue.EmptyQueue(IP) {
-							thisIpGotOrders = IP
-						}
-					}
-					if thisIpGotOrders == "" {
-						fsm.GoToIDLE()
-					} else {
-						Elevators[GetLocalIP()].CompletingOrdersForElevator = thisIpGotOrders
-						fsm.GoToElevating(direction)
-					}
-				} else if direction == 0 && !queue.EmptyQueue(GetLocalIP()) {
+				direction := queue.QueueDirection(PrevDirection, Elevators[GetLocalIP()].Floor)
+				if direction == 0 && queue.EmptyQueue() {
+					fsm.GoToIDLE()
+				} else if direction == 0 && !queue.EmptyQueue() {
 					fsm.GoToDoorOpen()
 					queue.RemoveOrder(Elevators[GetLocalIP()].Floor, 0)
 				} else {
-					Elevators[GetLocalIP()].CompletingOrdersForElevator = GetLocalIP()
 					fsm.GoToElevating(direction)
 				}
 

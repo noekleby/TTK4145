@@ -11,7 +11,7 @@ import (
 //Initializing FSM
 func InitFsm() {
 	fmt.Println("Currently initializin fsm going to state: IDLE")
-	Elevators[GetLocalIP()] = &Elevator{true, 0, 0, IDLE, GetLocalIP(), [4]bool{false, false, false, false}, [4]bool{false, false, false, false}, [4]bool{false, false, false, false}}
+	Elevators[GetLocalIP()] = &Elevator{true, 0, 0, IDLE, [4]bool{false, false, false, false}, [4]bool{false, false, false, false}, [4]bool{false, false, false, false}}
 }
 
 func GoToIDLE() {
