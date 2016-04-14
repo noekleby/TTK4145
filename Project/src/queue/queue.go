@@ -3,9 +3,8 @@ package queue
 import (
 	. "../definitions"
 	"../driver"
-	"fmt"
-	//"../eventhandler"
 	. "../network"
+	"fmt"
 )
 
 const (
@@ -13,22 +12,23 @@ const (
 )
 
 func ShouldStop(floor, dir int) bool {
-	fmt.Println(Elevators[GetLocalIP()].ExternalUp, Elevators[GetLocalIP()].InternalOrders, Elevators[GetLocalIP()].ExternalDown)
-	if Elevators[GetLocalIP()].InternalOrders[floor] == true {
+	ip := Elevators[GetLocalIP()].CompletingOrdersForElevator
+	fmt.Println(Elevators[ip].ExternalUp, Elevators[ip].InternalOrders, Elevators[ip].ExternalDown)
+	if Elevators[ip].InternalOrders[floor] == true {
 		return true
 	}
 	if dir == 1 {
-		if Elevators[GetLocalIP()].ExternalUp[floor] == true || floor == driver.N_FLOORS-1 {
+		if Elevators[ip].ExternalUp[floor] == true || floor == driver.N_FLOORS-1 {
 			return true
-		} else if QueueDirectionUp(floor) {
+		} else if QueueDirectionUp(floor, ip) {
 			return false
 		} else {
 			return true
 		}
 	} else if dir == -1 {
-		if Elevators[GetLocalIP()].ExternalDown[floor] == true || floor == 0 {
+		if Elevators[ip].ExternalDown[floor] == true || floor == 0 {
 			return true
-		} else if QueueDirectionDown(floor) {
+		} else if QueueDirectionDown(floor, ip) {
 			return false
 		} else {
 			return true
@@ -37,38 +37,38 @@ func ShouldStop(floor, dir int) bool {
 	return true
 }
 
-func QueueDirection(direction, floor int) int {
-	if EmptyQueue() == true {
+func QueueDirection(direction, floor int, ip string) int {
+	if EmptyQueue(ip) == true {
 		return 0
 
 	} else if direction == 1 {
-		if QueueDirectionUp(floor) {
+		if QueueDirectionUp(floor, ip) {
 			return 1
-		} else if QueueDirectionDown(floor) {
+		} else if QueueDirectionDown(floor, ip) {
 			return -1
 		}
 	} else if direction == -1 {
-		if QueueDirectionDown(floor) {
+		if QueueDirectionDown(floor, ip) {
 			return -1
-		} else if QueueDirectionUp(floor) {
+		} else if QueueDirectionUp(floor, ip) {
 			return 1
 		}
 	}
 	return 0
 }
 
-func QueueDirectionUp(floor int) bool {
+func QueueDirectionUp(floor int, ip string) bool {
 	for f := floor + 1; f < driver.N_FLOORS; f++ {
-		if Elevators[GetLocalIP()].InternalOrders[f] == true || Elevators[GetLocalIP()].ExternalUp[f] == true || Elevators[GetLocalIP()].ExternalDown[f] == true {
+		if Elevators[ip].InternalOrders[f] == true || Elevators[ip].ExternalUp[f] == true || Elevators[ip].ExternalDown[f] == true {
 			return true
 		}
 	}
 	return false
 }
 
-func QueueDirectionDown(floor int) bool {
+func QueueDirectionDown(floor int, ip string) bool {
 	for f := floor - 1; f > -1; f-- {
-		if Elevators[GetLocalIP()].InternalOrders[f] == true || Elevators[GetLocalIP()].ExternalUp[f] == true || Elevators[GetLocalIP()].ExternalDown[f] == true {
+		if Elevators[ip].InternalOrders[f] == true || Elevators[ip].ExternalUp[f] == true || Elevators[ip].ExternalDown[f] == true {
 			return true
 		}
 	}
@@ -266,10 +266,10 @@ func calculateOrderCostForOnlyOneElevator(currFloor int, orderedFloor int, direc
 
 }*/
 
-func EmptyQueue() bool {
+func EmptyQueue(ip string) bool {
 	check := true
 	for floor := 0; floor < driver.N_FLOORS; floor++ {
-		if Elevators[GetLocalIP()].ExternalUp[floor] == true || Elevators[GetLocalIP()].ExternalDown[floor] == true || Elevators[GetLocalIP()].InternalOrders[floor] == true {
+		if Elevators[ip].ExternalUp[floor] == true || Elevators[ip].ExternalDown[floor] == true || Elevators[ip].InternalOrders[floor] == true {
 			check = false
 		}
 	}
