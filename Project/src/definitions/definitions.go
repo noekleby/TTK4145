@@ -54,4 +54,5 @@ type Elevator struct {
 type Order struct {
 	Buttontype int
 	Floor      int
+	FromIP     string
 }

@@ -85,24 +85,22 @@ func RemoveRemoteOrder(floor int, direction int) {
 	}
 }
 
-func AddRemoteOrder(IP string, queue [driver.N_FLOORS]bool, direction int) {
-	for i := 0; i < N_FLOORS; i++ {
-		if direction == UP {
-			if !Elevators[IP].ExternalUp[i] && queue[i] {
-				driver.SetButtonLamp(i, UP, true)
-				Elevators[IP].ExternalUp[i] = queue[i]
-			}
-		} else {
-			if !Elevators[IP].ExternalDown[i] && queue[i] {
-				driver.SetButtonLamp(i, DOWN, true)
-				Elevators[IP].ExternalDown[i] = queue[i]
-			}
+func AddRemoteOrder(IP string, elevator Elevator, order Order) {
+	if order.Buttontype == UP {
+		if !Elevators[IP].ExternalUp[order.Floor] && elevator.ExternalUp[order.Floor] {
+			driver.SetButtonLamp(order.Floor, UP, true)
+			Elevators[IP].ExternalUp[order.Floor] = elevator.ExternalUp[order.Floor]
+		}
+	} else {
+		if !Elevators[IP].ExternalDown[order.Floor] && elevator.ExternalDown[order.Floor] {
+			driver.SetButtonLamp(order.Floor, DOWN, true)
+			Elevators[IP].ExternalDown[order.Floor] = elevator.ExternalDown[order.Floor]
 		}
 	}
 }
 
 func RemoveOrder(floor int, dir int) {
-	order := Order{-1, -1}
+	order := Order{-1, -1, ""}
 	if dir == 1 {
 		Elevators[GetLocalIP()].ExternalUp[floor] = false
 		Elevators[GetLocalIP()].InternalOrders[floor] = false
@@ -147,20 +145,26 @@ func AddLocalOrder(order Order) {
 	switch order.Buttontype {
 	case UP:
 		Elevators[cheapestElevator].ExternalUp[order.Floor] = true
-		newMsg := Message{"Add order", GetLocalIP(), cheapestElevator, *(Elevators[GetLocalIP()]), order}
-		BroadcastMessage(newMsg)
+		if order.FromIP != GetLocalIP() {
+			newMsg := Message{"Add order", GetLocalIP(), cheapestElevator, *(Elevators[GetLocalIP()]), order}
+			BroadcastMessage(newMsg)
+		}
 		driver.SetButtonLamp(order.Floor, order.Buttontype, true)
 		fmt.Println("Elevator added in ExternalUp queue")
 	case DOWN:
 		Elevators[cheapestElevator].ExternalDown[order.Floor] = true
-		newMsg := Message{"Add order", GetLocalIP(), cheapestElevator, *(Elevators[GetLocalIP()]), order}
-		BroadcastMessage(newMsg)
+		if order.FromIP != GetLocalIP() {
+			newMsg := Message{"Add order", GetLocalIP(), cheapestElevator, *(Elevators[GetLocalIP()]), order}
+			BroadcastMessage(newMsg)
+		}
 		driver.SetButtonLamp(order.Floor, order.Buttontype, true)
 		fmt.Println("Elevator added in ExternalDown queue")
 	case COMMAND:
 		Elevators[GetLocalIP()].InternalOrders[order.Floor] = true
-		newMsg := Message{"Add order", GetLocalIP(), cheapestElevator, *(Elevators[GetLocalIP()]), order}
-		BroadcastMessage(newMsg)
+		if order.FromIP != GetLocalIP() {
+			newMsg := Message{"Add order", GetLocalIP(), cheapestElevator, *(Elevators[GetLocalIP()]), order}
+			BroadcastMessage(newMsg)
+		}
 		driver.SetButtonLamp(order.Floor, order.Buttontype, true)
 		fmt.Println("New internal order to floor:", order.Floor, " added")
 	}

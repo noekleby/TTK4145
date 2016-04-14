@@ -29,11 +29,14 @@ func MessageTypeHandler(messageReciveChan chan Message, floorChan chan int, butt
 			}
 
 		case "Add order":
-			if msg.SenderIP != msg.TargetIP {
-				queue.AddRemoteOrder(msg.TargetIP, msg.Elevator.ExternalUp, msg.Order.Buttontype)
+			if (msg.SenderIP != msg.TargetIP) && (msg.SenderIP != GetLocalIP()) {
+				queue.AddRemoteOrder(msg.TargetIP, msg.Elevator, msg.Order)
 			}
 			if msg.SenderIP != GetLocalIP() {
 				updateElevatorStatus(msg.SenderIP, msg.Elevator)
+			}
+			if msg.TargetIP == GetLocalIP() {
+				buttonChan <- msg.Order
 			}
 		}
 	}
@@ -150,6 +153,7 @@ func ButtonEventCheck(buttonChan chan Order) {
 					buttonPressed[floor][buttonType] = true
 					order.Buttontype = buttonType
 					order.Floor = floor
+					order.FromIP = GetLocalIP()
 					buttonChan <- order
 				} else if buttonPressed[floor][buttonType] {
 					buttonPressed[floor][buttonType] = false
