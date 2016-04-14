@@ -127,6 +127,13 @@ func RemoveOrder(floor int, dir int) {
 		Elevators[GetLocalIP()].ExternalDown[floor] = false
 		Elevators[GetLocalIP()].InternalOrders[floor] = false
 		Elevators[GetLocalIP()].ExternalUp[floor] = false
+		if floor == 0 {
+			newMsg := Message{"Remove order up", GetLocalIP(), "", *(Elevators[GetLocalIP()]), order}
+			BroadcastMessage(newMsg)
+		} else if floor == 3 {
+			newMsg := Message{"Remove order down", GetLocalIP(), "", *(Elevators[GetLocalIP()]), order}
+			BroadcastMessage(newMsg)
+		}
 		driver.SetButtonLamp(floor, COMMAND, false)
 		driver.SetButtonLamp(floor, DOWN, false)
 		driver.SetButtonLamp(floor, UP, false)
