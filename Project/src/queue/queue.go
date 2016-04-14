@@ -199,6 +199,17 @@ func costFunction(currFloor int, orderedFloor int, elevator *Elevator) int {
 
 	cost := 0
 
+	for floor := currFloor; floor < driver.N_FLOORS; floor++ {
+		if elevator.ExternalUp[floor] || elevator.InternalOrders[floor] {
+			cost++
+		}
+	}
+	for floor := driver.N_FLOORS - 1; floor >= 0; floor-- {
+		if elevator.ExternalDown[floor] || elevator.InternalOrders[floor] {
+			cost++
+		}
+	}
+
 	if elevator.Direction == UP && orderedFloor < currFloor {
 		cost += 5
 

@@ -31,8 +31,27 @@ func MessageTypeHandler(messageReciveChan chan Message, floorChan chan int, butt
 
 		case "Add order":
 			fmt.Println("In MessageTypeHandler, Add order")
+			if msg.SenderIP != GetLocalIP() {
+				if msg.SenderIP != msg.TargetIP {
+					if msg.TargetIP != GetLocalIP() {
+						queue.AddRemoteOrder(msg.TargetIP, msg.Elevator, msg.Order)
+					} else {
+						buttonChan <- msg.Order
+					}
+				} else {
+					updateElevatorStatus(msg.SenderIP, msg.Elevator)
+				}
+
+			} /*else {
+				msg.Order.FromIP = GetLocalIP()
+				if msg.TargetIP == GetLocalIP() {
+					buttonChan <- msg.Order
+				}
+			}
+
 			if (msg.SenderIP != msg.TargetIP) && (msg.SenderIP != GetLocalIP()) {
 				queue.AddRemoteOrder(msg.TargetIP, msg.Elevator, msg.Order)
+				fmt.Println("I do get inside here and add the order again!")
 			}
 			if msg.SenderIP != GetLocalIP() {
 				updateElevatorStatus(msg.SenderIP, msg.Elevator)
@@ -42,7 +61,7 @@ func MessageTypeHandler(messageReciveChan chan Message, floorChan chan int, butt
 			}
 			if msg.TargetIP == GetLocalIP() {
 				buttonChan <- msg.Order
-			}
+			}*/
 		}
 	}
 }
