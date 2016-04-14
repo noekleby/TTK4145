@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func MessageTypeHandler(messageReciveChan chan Message, floorChan chan int, buttonChan chan Order) {
+func MessageTypeHandler(messageReciveChan chan Message, floorChan chan int, buttonChan chan Order, lightEventChan chan int) {
 
 	for {
 		msg := <-messageReciveChan
@@ -19,8 +19,9 @@ func MessageTypeHandler(messageReciveChan chan Message, floorChan chan int, butt
 		case "Remove order up":
 			fmt.Println("In MessageTypeHandler, Remove order up")
 			//if msg.SenderIP != GetLocalIP() {
-			driver.SetButtonLamp(msg.Elevator.Floor, UP, false)
+			//driver.SetButtonLamp(msg.Elevator.Floor, UP, false)
 			Elevators[msg.SenderIP].ExternalUp[msg.Elevator.Floor] = false
+			lightEventChan <- 1
 			Elevators[msg.SenderIP].Floor = msg.Elevator.Floor
 			Elevators[msg.SenderIP].Direction = 1
 
@@ -31,8 +32,9 @@ func MessageTypeHandler(messageReciveChan chan Message, floorChan chan int, butt
 
 		case "Remove order down":
 			//if msg.SenderIP != GetLocalIP() {
-			driver.SetButtonLamp(msg.Elevator.Floor, DOWN, false)
+			//driver.SetButtonLamp(msg.Elevator.Floor, DOWN, false)
 			Elevators[msg.SenderIP].ExternalDown[msg.Elevator.Floor] = false
+			lightEventChan <- 1
 			Elevators[msg.SenderIP].Floor = msg.Elevator.Floor
 			Elevators[msg.SenderIP].Direction = -1
 			//Original

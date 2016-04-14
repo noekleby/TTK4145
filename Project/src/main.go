@@ -31,7 +31,7 @@ func main() {
 
 	// Handels incoming and outgoing messages and what needs to be done when they get one.
 	go MessageReciever(messageReciveChan)
-	go MessageTypeHandler(messageReciveChan, floorChan, buttonChan)
+	go MessageTypeHandler(messageReciveChan, floorChan, buttonChan, lightEventChan)
 	go MessageBroadcast(MessageBroadcastChan)
 
 	// Handels heartbeats, finds new elevators, tells us wether known elevators are dead or alive.
