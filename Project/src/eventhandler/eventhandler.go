@@ -31,10 +31,21 @@ func MessageTypeHandler(messageReciveChan chan Message, floorChan chan int, butt
 
 		case "Add order":
 			fmt.Println("In MessageTypeHandler, Add order")
+			if msg.SenderIP != GetLocalIP() {
+				if msg.Order.Buttontype == UP {
+					Elevators[msg.TargetIP].ExternalUp[msg.Order.Floor] = true
+					driver.SetButtonLamp(msg.Order.Floor, UP, true)
+				} else if msg.Order.Buttontype == DOWN {
+					Elevators[msg.TargetIP].ExternalDown[msg.Order.Floor] = true
+					driver.SetButtonLamp(msg.Order.Floor, DOWN, true)
+				} else {
+					Elevators[msg.TargetIP].InternalOrders[msg.Order.Floor] = true
+				}
+			}
 
-			if (msg.SenderIP != msg.TargetIP) && (msg.SenderIP != GetLocalIP()) {
+			//Den Originale
+			/*if (msg.SenderIP != msg.TargetIP) && (msg.SenderIP != GetLocalIP()) {
 				queue.AddRemoteOrder(msg.TargetIP, msg.Elevator, msg.Order)
-				fmt.Println("I do get inside here and add the order again!")
 			}
 			if msg.SenderIP != GetLocalIP() {
 				updateElevatorStatus(msg.SenderIP, msg.Elevator)
@@ -44,7 +55,8 @@ func MessageTypeHandler(messageReciveChan chan Message, floorChan chan int, butt
 			}
 			if msg.TargetIP == GetLocalIP() {
 				buttonChan <- msg.Order
-			}
+			}*/
+
 			/*if msg.SenderIP != GetLocalIP() {
 				fmt.Println("If this prints, its wrong.")
 				if msg.SenderIP != msg.TargetIP {

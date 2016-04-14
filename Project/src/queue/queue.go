@@ -75,16 +75,20 @@ func QueueDirectionDown(floor int) bool {
 }
 
 func RemoveRemoteOrder(floor int, direction int) {
+	//fmt.Println("Printing from Remove Remote Order", direction)
 	if direction == UP {
 		Elevators[GetLocalIP()].ExternalUp[floor] = false
 		driver.SetButtonLamp(floor, UP, false)
+		fmt.Println("Remove remoter order UP")
 	} else if direction == DOWN {
 		Elevators[GetLocalIP()].ExternalDown[floor] = false
 		driver.SetButtonLamp(floor, DOWN, false)
+		fmt.Println("Remove remoter order DOWN")
 	}
 }
 
 func AddRemoteOrder(IP string, elevator Elevator, order Order) {
+	fmt.Println("Printing from add Remote Order")
 	if order.Buttontype == UP {
 		if !Elevators[IP].ExternalUp[order.Floor] && elevator.ExternalUp[order.Floor] {
 			driver.SetButtonLamp(order.Floor, UP, true)
@@ -94,9 +98,27 @@ func AddRemoteOrder(IP string, elevator Elevator, order Order) {
 		if !Elevators[IP].ExternalDown[order.Floor] && elevator.ExternalDown[order.Floor] {
 			driver.SetButtonLamp(order.Floor, DOWN, true)
 			Elevators[IP].ExternalDown[order.Floor] = elevator.ExternalDown[order.Floor]
+			fmt.Println("Did not crash this time.")
 		}
 	}
 }
+
+//Den Originale:
+/*func AddRemoteOrder(IP string, elevator Elevator, order Order) {
+	fmt.Println("Printing from add Remote Order")
+	if order.Buttontype == UP {
+		if !Elevators[IP].ExternalUp[order.Floor] && elevator.ExternalUp[order.Floor] {
+			driver.SetButtonLamp(order.Floor, UP, true)
+			Elevators[IP].ExternalUp[order.Floor] = elevator.ExternalUp[order.Floor]
+		}
+	} else {
+		if !Elevators[IP].ExternalDown[order.Floor] && elevator.ExternalDown[order.Floor] {
+			driver.SetButtonLamp(order.Floor, DOWN, true)
+			Elevators[IP].ExternalDown[order.Floor] = elevator.ExternalDown[order.Floor]
+			fmt.Println("Did not crash this time.")
+		}
+	}
+}*/
 
 func RemoveOrder(floor int, dir int) {
 	order := Order{-1, -1, ""}
@@ -111,6 +133,7 @@ func RemoveOrder(floor int, dir int) {
 			Elevators[GetLocalIP()].ExternalDown[floor] = false
 			driver.SetButtonLamp(floor, DOWN, false)
 		}
+		fmt.Println("Inside removeOrder 1")
 	} else if dir == -1 {
 		Elevators[GetLocalIP()].ExternalDown[floor] = false
 		Elevators[GetLocalIP()].InternalOrders[floor] = false
@@ -122,6 +145,7 @@ func RemoveOrder(floor int, dir int) {
 			driver.SetButtonLamp(floor, UP, false)
 			Elevators[GetLocalIP()].ExternalUp[floor] = false
 		}
+		fmt.Println("Inside removeOrder 2")
 	} else {
 		Elevators[GetLocalIP()].ExternalDown[floor] = false
 		Elevators[GetLocalIP()].InternalOrders[floor] = false
@@ -136,6 +160,7 @@ func RemoveOrder(floor int, dir int) {
 		driver.SetButtonLamp(floor, COMMAND, false)
 		driver.SetButtonLamp(floor, DOWN, false)
 		driver.SetButtonLamp(floor, UP, false)
+		fmt.Println("Inside removeOrder 3")
 	}
 
 }
@@ -166,10 +191,10 @@ func AddLocalOrder(order Order) {
 		fmt.Println("Elevator added in ExternalDown queue")
 	case COMMAND:
 		Elevators[GetLocalIP()].InternalOrders[order.Floor] = true
-		if order.FromIP != GetLocalIP() {
+		/*if order.FromIP != GetLocalIP() {
 			newMsg := Message{"Add order", GetLocalIP(), cheapestElevator, *(Elevators[GetLocalIP()]), order}
 			BroadcastMessage(newMsg)
-		}
+		}*/
 		driver.SetButtonLamp(order.Floor, order.Buttontype, true)
 		fmt.Println("New internal order to floor:", order.Floor, " added")
 	}
