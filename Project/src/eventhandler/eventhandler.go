@@ -133,6 +133,7 @@ func ButtonandFloorEventHandler(floorChan chan int, buttonChan chan Order, light
 		case floor := <-floorChan:
 			dir := Elevators[GetLocalIP()].Direction
 			if floor != -1 {
+				driver.SetFloorIndicator(floor)
 				Elevators[GetLocalIP()].Floor = floor
 				if queue.ShouldStop(floor, dir) {
 					queue.RemoveOrder(floor, PrevDirection, lightEventChan)
