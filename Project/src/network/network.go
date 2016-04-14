@@ -45,10 +45,10 @@ func MessageBroadcast(MessageBroadcastChan chan Message) {
 			fmt.Println("Error:", error)
 			time.Sleep((4 * time.Second))
 		}
-		fmt.Println("Broadcasting message")
-		fmt.Println("")
-		fmt.Println("")
-		fmt.Println("") //Just for easier reading in terminal
+		//fmt.Println("Broadcasting message")
+		//fmt.Println("")
+		//fmt.Println("")
+		//fmt.Println("") //Just for easier reading in terminal
 		bufferSendChan <- buffer
 	}
 }
@@ -66,11 +66,11 @@ func MessageReciever(messageRecieveChan chan Message) {
 			fmt.Println("Error:", error)
 			time.Sleep((4 * time.Second))
 		}
-		//if msg.SenderIP != GetLocalIP() {
-		fmt.Println("Receiving: ")
-		printMessage(msg)
-		messageRecieveChan <- msg
-		//}
+		if msg.SenderIP != GetLocalIP() {
+			fmt.Println("Receiving: ")
+			printMessage(msg)
+			messageRecieveChan <- msg
+		}
 	}
 }
 

@@ -18,41 +18,41 @@ func MessageTypeHandler(messageReciveChan chan Message, floorChan chan int, butt
 
 		case "Remove order up":
 			fmt.Println("In MessageTypeHandler, Remove order up")
-			if msg.SenderIP != GetLocalIP() {
-				driver.SetButtonLamp(msg.Elevator.Floor, UP, false)
-				Elevators[msg.SenderIP].ExternalUp[msg.Elevator.Floor] = false
-				Elevators[msg.SenderIP].Floor = msg.Elevator.Floor
-				Elevators[msg.SenderIP].Direction = 1
+			//if msg.SenderIP != GetLocalIP() {
+			driver.SetButtonLamp(msg.Elevator.Floor, UP, false)
+			Elevators[msg.SenderIP].ExternalUp[msg.Elevator.Floor] = false
+			Elevators[msg.SenderIP].Floor = msg.Elevator.Floor
+			Elevators[msg.SenderIP].Direction = 1
 
-				//Originalen
-				/*updateElevatorStatus(msg.SenderIP, msg.Elevator)
-				queue.RemoveRemoteOrder(msg.Elevator.Floor, UP)*/
-			}
+			//Originalen
+			/*updateElevatorStatus(msg.SenderIP, msg.Elevator)
+			queue.RemoveRemoteOrder(msg.Elevator.Floor, UP)*/
+			//}
 
 		case "Remove order down":
-			if msg.SenderIP != GetLocalIP() {
-				driver.SetButtonLamp(msg.Elevator.Floor, DOWN, false)
-				Elevators[msg.SenderIP].ExternalDown[msg.Elevator.Floor] = false
-				Elevators[msg.SenderIP].Floor = msg.Elevator.Floor
-				Elevators[msg.SenderIP].Direction = -1
-				//Original
-				/*updateElevatorStatus(msg.SenderIP, msg.Elevator)
-				queue.RemoveRemoteOrder(msg.Elevator.Floor, DOWN)*/
-			}
+			//if msg.SenderIP != GetLocalIP() {
+			driver.SetButtonLamp(msg.Elevator.Floor, DOWN, false)
+			Elevators[msg.SenderIP].ExternalDown[msg.Elevator.Floor] = false
+			Elevators[msg.SenderIP].Floor = msg.Elevator.Floor
+			Elevators[msg.SenderIP].Direction = -1
+			//Original
+			/*updateElevatorStatus(msg.SenderIP, msg.Elevator)
+			queue.RemoveRemoteOrder(msg.Elevator.Floor, DOWN)*/
+			//}
 
 		case "Add order":
 			fmt.Println("In MessageTypeHandler, Add order")
-			if msg.SenderIP != GetLocalIP() {
-				if msg.Order.Buttontype == UP {
-					Elevators[msg.TargetIP].ExternalUp[msg.Order.Floor] = true
-					driver.SetButtonLamp(msg.Order.Floor, UP, true)
-				} else if msg.Order.Buttontype == DOWN {
-					Elevators[msg.TargetIP].ExternalDown[msg.Order.Floor] = true
-					driver.SetButtonLamp(msg.Order.Floor, DOWN, true)
-				} else {
-					Elevators[msg.TargetIP].InternalOrders[msg.Order.Floor] = true
-				}
+			//if msg.SenderIP != GetLocalIP() {
+			if msg.Order.Buttontype == UP {
+				Elevators[msg.TargetIP].ExternalUp[msg.Order.Floor] = true
+				driver.SetButtonLamp(msg.Order.Floor, UP, true)
+			} else if msg.Order.Buttontype == DOWN {
+				Elevators[msg.TargetIP].ExternalDown[msg.Order.Floor] = true
+				driver.SetButtonLamp(msg.Order.Floor, DOWN, true)
+			} else {
+				Elevators[msg.TargetIP].InternalOrders[msg.Order.Floor] = true
 			}
+			//}
 
 			//Den Originale
 			/*if (msg.SenderIP != msg.TargetIP) && (msg.SenderIP != GetLocalIP()) {
