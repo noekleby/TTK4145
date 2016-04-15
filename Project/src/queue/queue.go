@@ -106,6 +106,7 @@ func AddRemoteOrder(IP string, elevator Elevator, order Order) {
 func RemoveOrder(floor int, dir int, lightEventChan chan int) {
 	fmt.Println("\nStarting again\n")
 	fmt.Println("floor: ", floor)
+	fmt.Println("Direction:", dir)
 	fmt.Println("Signal UP:", driver.ElevGetLampSignal(UP, floor))
 	fmt.Println("Signal DOWN:", driver.ElevGetLampSignal(DOWN, floor))
 	order := Order{-1, -1, ""}

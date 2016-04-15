@@ -117,7 +117,7 @@ func ButtonandFloorEventHandler(floorChan chan int, buttonChan chan Order, light
 					fsm.GoToIDLE()
 				} else if direction == 0 && !queue.EmptyQueue() {
 					fsm.GoToDoorOpen()
-					queue.RemoveOrder(Elevators[GetLocalIP()].Floor, 0, lightEventChan)
+					queue.RemoveOrder(Elevators[GetLocalIP()].Floor, PrevDirection, lightEventChan)
 				} else {
 					fsm.GoToElevating(direction)
 				}
