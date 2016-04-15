@@ -160,7 +160,7 @@ func RemoveOrder(floor int, dir int, lightEventChan chan int) {
 func AddLocalOrder(order Order, lightEventChan chan int) {
 	var cheapestElevator string
 	if order.Buttontype != COMMAND {
-		cheapestElevator = findCheapestElevator(order.Floor)
+		cheapestElevator = findCheapestElevator(order)
 	}
 	switch order.Buttontype {
 	case UP:
@@ -187,12 +187,12 @@ func AddLocalOrder(order Order, lightEventChan chan int) {
 	}
 }
 
-func findCheapestElevator(floor int) string { // Think this is our obstacle
+func findCheapestElevator(order Order) string { // Think this is our obstacle
 	cheapestElevator := ""
 	minCost := 9999
 	for IP, elevator := range Elevators {
 		if Elevators[IP].Active == true {
-			cost := costFunction(elevator.Floor, floor, elevator)
+			cost := costFunction(order, elevator)
 			fmt.Println("Cost for order is ", cost, " for IP ", IP)
 			if cost < minCost {
 				minCost = cost
@@ -207,30 +207,43 @@ func findCheapestElevator(floor int) string { // Think this is our obstacle
 	return cheapestElevator
 }
 
-func costFunction(currFloor int, orderedFloor int, elevator *Elevator) int {
+func costFunction(order Order, elevator *Elevator) int {
 
 	cost := 0
-
-	/*for floor := currFloor; floor < driver.N_FLOORS; floor++ {
-		if elevator.ExternalUp[floor] || elevator.InternalOrders[floor] {
-			cost++
+	if order.Buttontype == DOWN {
+		for floor := elevator.Floor; floor == 0; floor-- {
+			if elevator.ExternalDown[floor] {
+				cost += 1
+			}
 		}
 	}
-	for floor := driver.N_FLOORS - 1; floor >= 0; floor-- {
-		if elevator.ExternalDown[floor] || elevator.InternalOrders[floor] {
-			cost++
+
+	if order.Buttontype == UP {
+		for floor := elevator.Floor; floor == (driver.N_FLOORS - 1); floor++ {
+			if elevator.ExternalUp[floor] {
+				cost += 1
+			}
 		}
-	}*/
+	}
+
+	if order.Buttontype == UP && elevator.ExternalDown[order.Floor] {
+		cost += 7
+	}
+
+	if order.Buttontype == DOWN && elevator.ExternalUp[order.Floor] {
+		cost += 7
+	}
+
 	for floor := 0; floor < driver.N_FLOORS; floor++ {
 		if elevator.InternalOrders[floor] {
 			cost += 1
 		}
 	}
 
-	if elevator.Direction == UP && orderedFloor < currFloor {
+	if elevator.Direction == UP && order.Floor < elevator.Floor {
 		cost += 5
 
-	} else if elevator.Direction == DOWN && orderedFloor > currFloor {
+	} else if elevator.Direction == DOWN && order.Floor > elevator.Floor {
 		cost += 5
 
 	}

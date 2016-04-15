@@ -35,11 +35,14 @@ func MessageTypeHandler(messageReciveChan chan Message, floorChan chan int, butt
 			if msg.Order.Buttontype == UP {
 				Elevators[msg.TargetIP].ExternalUp[msg.Order.Floor] = true
 				lightEventChan <- 1
+				Elevators[msg.SenderIP].Floor = msg.Elevator.Floor
 			} else if msg.Order.Buttontype == DOWN {
 				Elevators[msg.TargetIP].ExternalDown[msg.Order.Floor] = true
 				lightEventChan <- 1
+				Elevators[msg.SenderIP].Floor = msg.Elevator.Floor
 			} else {
 				Elevators[msg.TargetIP].InternalOrders[msg.Order.Floor] = true
+				Elevators[msg.SenderIP].Floor = msg.Elevator.Floor
 			}
 		}
 	}
