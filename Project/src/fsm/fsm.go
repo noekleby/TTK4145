@@ -11,7 +11,7 @@ import (
 //Initializing FSM
 func InitFsm() {
 	fmt.Println("Currently initializin fsm going to state: IDLE")
-	Elevators[GetLocalIP()] = &Elevator{true, 0, 0, IDLE, [4]bool{false, false, false, false}, [4]bool{false, false, false, false}, [4]bool{false, false, false, false}}
+	Elevators[GetLocalIP()] = &Elevator{true, 0, -1, IDLE, [4]bool{false, false, false, false}, [4]bool{false, false, false, false}, [4]bool{false, false, false, false}}
 }
 
 func GoToIDLE() {
@@ -42,7 +42,7 @@ func GoToDoorOpen() {
 	driver.StopElevate()
 	Elevators[GetLocalIP()].FsmState = DOOR_OPEN
 	driver.ElevSetDoorOpenLamp(1)
-	time.Sleep(2 * time.Second) //The lines under should happend after sleep.
+	time.Sleep(2 * time.Second)
 	driver.ElevSetDoorOpenLamp(0)
 	GoToIDLE()
 }

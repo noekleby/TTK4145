@@ -28,7 +28,10 @@ func GetLocalIP() string {
 //------------Message-------------------------------------------------------------------------------------------------------------
 
 func BroadcastMessage(message Message) {
-	//fmt.Println("\nBroadcasting:")
+	fmt.Println("\nBroadcasting:")
+	fmt.Println("Message type: ", message.MessageType)
+	fmt.Println("Target:", message.TargetIP)
+	fmt.Println("Order:", message.Order)
 	//printMessage(message)
 	MessageBroadcastChan <- message
 }
@@ -40,15 +43,11 @@ func MessageBroadcast(MessageBroadcastChan chan Message) {
 
 	for {
 		msg := <-MessageBroadcastChan
-		buffer, error := json.Marshal(msg) //Can not call it buffer
+		buffer, error := json.Marshal(msg)
 		if error != nil {
 			fmt.Println("Error:", error)
 			time.Sleep((4 * time.Second))
 		}
-		//fmt.Println("Broadcasting message")
-		//fmt.Println("")
-		//fmt.Println("")
-		//fmt.Println("") //Just for easier reading in terminal
 		bufferSendChan <- buffer
 	}
 }

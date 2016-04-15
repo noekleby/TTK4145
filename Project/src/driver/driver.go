@@ -147,11 +147,3 @@ func ElevGetLampSignal(button int, floor int) int {
 		return ioReadBit(lamp_channel_matrix[floor][button])
 	}
 }
-
-//We do not need this:
-/*func ElevGetStopSignal() int {
-	return (ioReadBit(STOP))
-}
-func ElevGetObstructionSignal() int {
-	return (ioReadBit(OBSTRUCTION))
-}*/

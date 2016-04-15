@@ -17,74 +17,30 @@ func MessageTypeHandler(messageReciveChan chan Message, floorChan chan int, butt
 		switch msg.MessageType {
 
 		case "Remove order up":
-			fmt.Println("In MessageTypeHandler, Remove order up")
-			//if msg.SenderIP != GetLocalIP() {
-			//driver.SetButtonLamp(msg.Elevator.Floor, UP, false)
+			fmt.Println("IP in Remove order up: ", msg.SenderIP, msg.TargetIP)
 			Elevators[msg.SenderIP].ExternalUp[msg.Elevator.Floor] = false
 			lightEventChan <- 1
 			Elevators[msg.SenderIP].Floor = msg.Elevator.Floor
 			Elevators[msg.SenderIP].Direction = 1
 
-			//Originalen
-			/*updateElevatorStatus(msg.SenderIP, msg.Elevator)
-			queue.RemoveRemoteOrder(msg.Elevator.Floor, UP)*/
-			//}
-
 		case "Remove order down":
-			//if msg.SenderIP != GetLocalIP() {
-			//driver.SetButtonLamp(msg.Elevator.Floor, DOWN, false)
+			fmt.Println("IP in Remove order down: ", msg.SenderIP, msg.TargetIP)
 			Elevators[msg.SenderIP].ExternalDown[msg.Elevator.Floor] = false
 			lightEventChan <- 1
 			Elevators[msg.SenderIP].Floor = msg.Elevator.Floor
 			Elevators[msg.SenderIP].Direction = -1
-			//Original
-			/*updateElevatorStatus(msg.SenderIP, msg.Elevator)
-			queue.RemoveRemoteOrder(msg.Elevator.Floor, DOWN)*/
-			//}
 
 		case "Add order":
-			//if msg.SenderIP != GetLocalIP() {
+			fmt.Println("IP in Add: ", msg.SenderIP, msg.TargetIP)
 			if msg.Order.Buttontype == UP {
 				Elevators[msg.TargetIP].ExternalUp[msg.Order.Floor] = true
-				//driver.SetButtonLamp(msg.Order.Floor, UP, true)
 				lightEventChan <- 1
 			} else if msg.Order.Buttontype == DOWN {
 				Elevators[msg.TargetIP].ExternalDown[msg.Order.Floor] = true
 				lightEventChan <- 1
-				//driver.SetButtonLamp(msg.Order.Floor, DOWN, true)
 			} else {
 				Elevators[msg.TargetIP].InternalOrders[msg.Order.Floor] = true
 			}
-			//}
-
-			//Den Originale
-			/*if (msg.SenderIP != msg.TargetIP) && (msg.SenderIP != GetLocalIP()) {
-				queue.AddRemoteOrder(msg.TargetIP, msg.Elevator, msg.Order)
-			}
-			if msg.SenderIP != GetLocalIP() {
-				updateElevatorStatus(msg.SenderIP, msg.Elevator)
-			}
-			if msg.SenderIP == GetLocalIP() {
-				msg.Order.FromIP = GetLocalIP()
-			}
-			if msg.TargetIP == GetLocalIP() {
-				buttonChan <- msg.Order
-			}*/
-
-			/*if msg.SenderIP != GetLocalIP() {
-				fmt.Println("If this prints, its wrong.")
-				if msg.SenderIP != msg.TargetIP {
-					if msg.TargetIP != GetLocalIP() {
-						queue.AddRemoteOrder(msg.TargetIP, msg.Elevator, msg.Order)
-					} else {
-						buttonChan <- msg.Order
-					}
-				} else {
-					updateElevatorStatus(msg.SenderIP, msg.Elevator)
-				}
-
-			}
-			*/
 		}
 	}
 }
@@ -112,7 +68,7 @@ func HeartbeatEventHandler(newElevatorChan chan string, deadElevatorChan chan st
 				Elevators[IP].Active = true
 			} else {
 				fmt.Println("Meeting new elevator")
-				Elevators[IP] = &Elevator{true, -1, 0, IDLE, [driver.N_FLOORS]bool{false, false, false, false}, [driver.N_FLOORS]bool{false, false, false, false}, [driver.N_FLOORS]bool{false, false, false, false}}
+				Elevators[IP] = &Elevator{true, -1, -1, IDLE, [driver.N_FLOORS]bool{false, false, false, false}, [driver.N_FLOORS]bool{false, false, false, false}, [driver.N_FLOORS]bool{false, false, false, false}}
 			}
 		case IP := <-deadElevatorChan:
 			fmt.Println("We have lost an elevator:", IP)
@@ -132,6 +88,8 @@ func ButtonandFloorEventHandler(floorChan chan int, buttonChan chan Order, light
 
 		case floor := <-floorChan:
 			dir := Elevators[GetLocalIP()].Direction
+			fmt.Println(Elevators[GetLocalIP()].Direction)
+			fmt.Println(PrevDirection)
 			if floor != -1 {
 				driver.SetFloorIndicator(floor)
 				Elevators[GetLocalIP()].Floor = floor
@@ -210,22 +168,6 @@ func ButtonEventCheck(buttonChan chan Order) {
 	}
 }
 
-/*func ElevateTowardNextDirection() {
-	if Elevators[GetLocalIP()].Direction != queue.QueueDirection(PrevDirection, Elevators[GetLocalIP()].Floor) {
-		Elevators[GetLocalIP()].Direction = queue.QueueDirection(PrevDirection, Elevators[GetLocalIP()].Floor)
-		if Elevators[GetLocalIP()].Direction != 0 {
-			fsm.GoToElevating(Elevators[GetLocalIP()].Direction)
-		}
-	}
-}
-
-/*else {
-				msg.Order.FromIP = GetLocalIP()
-				if msg.TargetIP == GetLocalIP() {
-					buttonChan <- msg.Order
-				}
-
-*/
 func LampHandler(lightEventChan chan int) {
 	InternalLamp := make([]bool, driver.N_FLOORS)
 	ExternalUpLamp := make([]bool, driver.N_FLOORS)
