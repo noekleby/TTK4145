@@ -207,11 +207,11 @@ func findCheapestElevator(floor int) string { // Think this is our obstacle
 	return cheapestElevator
 }
 
-/*func costFunction(currFloor int, orderedFloor int, elevator *Elevator) int {
+func costFunction(currFloor int, orderedFloor int, elevator *Elevator) int {
 
 	cost := 0
 
-	/for floor := currFloor; floor < driver.N_FLOORS; floor++ {
+	for floor := currFloor; floor < driver.N_FLOORS; floor++ {
 		if elevator.ExternalUp[floor] || elevator.InternalOrders[floor] {
 			cost++
 		}
@@ -221,7 +221,6 @@ func findCheapestElevator(floor int) string { // Think this is our obstacle
 			cost++
 		}
 	}
-
 	if elevator.Direction == UP && orderedFloor < currFloor {
 		cost += 5
 
@@ -230,9 +229,9 @@ func findCheapestElevator(floor int) string { // Think this is our obstacle
 
 	}
 	return cost
-}*/
+}
 
-func costFunction(currFloor int, targetFloor int, elevator *Elevator) int {
+/*func costFunction(currFloor int, targetFloor int, elevator *Elevator) int {
 	cost := 0
 	if currFloor == -1 { //Hvis heisen er mellom etasjer
 		cost++
@@ -256,7 +255,7 @@ func costFunction(currFloor int, targetFloor int, elevator *Elevator) int {
 		}
 	}
 	return cost
-}
+}/*
 
 /*
 func findCheapestElevator(floor int) string {
