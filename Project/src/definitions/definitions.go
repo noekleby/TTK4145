@@ -1,7 +1,6 @@
 package definitions
 
 import (
-	. "../driver"
 	"time"
 )
 
@@ -12,17 +11,16 @@ const (
 	UP         = 0
 	DOWN       = 1
 	COMMAND    = 2
-	//HeartBeatPort = 30117
-
+	HeartBeatPort = 30113
+	BroadcastPort = 30215
+	MOTOR_SPEED = 2800
+	N_FLOORS    = 4
+	N_BUTTONS   = 3
 )
 const (
 	IDLE = iota
 	ELEVATING
 	DOOR_OPEN
-)
-const (
-	HeartBeatPort = 30113
-	BroadcastPort = 30215
 )
 
 var Elevators = map[string]*Elevator{}
@@ -42,10 +40,11 @@ type Message struct {
 }
 
 type Elevator struct {
-	Active         bool
-	Floor          int
-	Direction      int
-	FsmState       int
+	Active         	bool
+	Floor          	int
+	Direction      	int
+	FsmState       	int
+	NewlyInit		bool
 	InternalOrders [N_FLOORS]bool
 	ExternalUp     [N_FLOORS]bool
 	ExternalDown   [N_FLOORS]bool

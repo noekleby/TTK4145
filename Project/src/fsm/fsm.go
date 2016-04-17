@@ -8,27 +8,16 @@ import (
 	"time"
 )
 
-//Initializing FSM
-func InitFsm() {
-	fmt.Println("Currently initializin fsm going to state: IDLE")
-	Elevators[GetLocalIP()] = &Elevator{true, 0, -1, IDLE, [4]bool{false, false, false, false}, [4]bool{false, false, false, false}, [4]bool{false, false, false, false}}
-}
-
 func GoToIDLE() {
 	driver.StopElevate()
-	Elevators[GetLocalIP()].FsmState = IDLE
 	Elevators[GetLocalIP()].Direction = 0
 }
 
 func GoToElevating(direction int) {
-	fmt.Println("Getting in to motion by going to state: ELEVATING")
 	Elevators[GetLocalIP()].Direction = direction
-	fmt.Println("The Direction is:", Elevators[GetLocalIP()].Direction)
 	if direction == 1 {
-		Elevators[GetLocalIP()].FsmState = ELEVATING
 		driver.ElevateUp()
 	} else if direction == -1 {
-		Elevators[GetLocalIP()].FsmState = ELEVATING
 		driver.ElevateDown()
 	} else {
 		time.Sleep(200 * time.Millisecond)
@@ -38,11 +27,11 @@ func GoToElevating(direction int) {
 }
 
 func GoToDoorOpen() {
-	fmt.Println("Going in to state: DOOR_OPEN")
+	fmt.Println("The doors are opening")
 	driver.StopElevate()
-	Elevators[GetLocalIP()].FsmState = DOOR_OPEN
-	driver.ElevSetDoorOpenLamp(1)
+	driver.SetDoorLamp(1)
 	time.Sleep(2 * time.Second)
-	driver.ElevSetDoorOpenLamp(0)
+	fmt.Println("The doors are closing")
+	driver.SetDoorLamp(0)
 	GoToIDLE()
 }

@@ -3,12 +3,8 @@ package driver
 import (
 	"fmt"
 	"time"
-)
-
-const (
-	MOTOR_SPEED = 2800
-	N_FLOORS    = 4
-	N_BUTTONS   = 3
+	. "../definitions"
+	."../network"
 )
 
 var button_channel_matrix = [N_FLOORS][N_BUTTONS]int{ //button command for 4 floors
@@ -27,15 +23,16 @@ var lamp_channel_matrix = [N_FLOORS][N_BUTTONS]int{ //floor lights for 4 floors
 var sensors = [N_FLOORS]int{SENSOR_FLOOR1, SENSOR_FLOOR2, SENSOR_FLOOR3, SENSOR_FLOOR4}
 
 //Check initialization of hardware, drive down to IDLE, clear all lights except floor indicator.
-func Init() int {
+func Init() bool {
 	init_success := ioInit()
 
-	if init_success == 1 {
+	if init_success {
+		Elevators[GetLocalIP()] = &Elevator{true, 0, -1, IDLE, true, [4]bool{false, false, false, false}, [4]bool{false, false, false, false}, [4]bool{false, false, false, false}}
 		StopElevate()
 		ElevateBottomFloor()
 		fmt.Println("I'm currently initializing elevator and hardware")
-		ElevSetStopLamp(0)
-		ElevSetDoorOpenLamp(0)
+		SetStopLamp(0)
+		SetDoorLamp(0)
 		for f := 0; f < N_FLOORS; f++ { //iterates over the 4 floors
 			for b := 0; b < N_BUTTONS; b++ { //iterates over buttons for all other floors than the one you are in
 				SetButtonLamp(f, b, false) //clears every button lamp (false = light off)
@@ -46,6 +43,11 @@ func Init() int {
 	}
 	return init_success
 
+}
+
+func StatusUpdate(){
+	newMsg := Message{"Status update", GetLocalIP(), "", *(Elevators[GetLocalIP()]), Order{-1,-1,""}}
+		BroadcastMessage(newMsg)
 }
 
 func ElevateDown() {
@@ -112,7 +114,7 @@ func SetButtonLamp(floor int, button int, value bool) {
 	}
 }
 
-func ElevSetDoorOpenLamp(door int) {
+func SetDoorLamp(door int) {
 	if door == 1 {
 		ioSetBit(LIGHT_DOOR_OPEN)
 	} else {
@@ -120,7 +122,7 @@ func ElevSetDoorOpenLamp(door int) {
 	}
 }
 
-func ElevSetStopLamp(stop int) {
+func SetStopLamp(stop int) {
 	if stop == 1 {
 		ioSetBit(LIGHT_STOP)
 	} else {
@@ -128,7 +130,7 @@ func ElevSetStopLamp(stop int) {
 	}
 }
 
-func ElevGetButtonSignal(button int, floor int) int {
+func GetButtonSignal(button int, floor int) int {
 	if floor < 0 || floor >= N_FLOORS || button < 0 || button >= N_BUTTONS {
 		return 0
 	} else {
@@ -136,14 +138,16 @@ func ElevGetButtonSignal(button int, floor int) int {
 	}
 }
 
-func GetDirection() int {
-	return ioReadBit(MOTORDIR)
-}
-
-func ElevGetLampSignal(button int, floor int) int {
+func GetLampSignal(button int, floor int) int {
 	if floor < 0 || floor >= N_FLOORS || button < 0 || button >= N_BUTTONS {
 		return 0
 	} else {
 		return ioReadBit(lamp_channel_matrix[floor][button])
 	}
 }
+
+func GetDirection() int {
+	return ioReadBit(MOTORDIR)
+}
+
+

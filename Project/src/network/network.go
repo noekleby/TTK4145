@@ -9,6 +9,7 @@ import (
 	"time"
 )
 
+
 func GetLocalIP() string {
 
 	addrs, error := net.InterfaceAddrs()
@@ -25,13 +26,7 @@ func GetLocalIP() string {
 	return ""
 }
 
-//------------Message-------------------------------------------------------------------------------------------------------------
-
 func BroadcastMessage(message Message) {
-	fmt.Println("\nBroadcasting:")
-	fmt.Println("Message type: ", message.MessageType)
-	fmt.Println("Target:", message.TargetIP)
-	fmt.Println("Order:", message.Order)
 	//printMessage(message)
 	MessageBroadcastChan <- message
 }
@@ -66,14 +61,11 @@ func MessageReciever(messageRecieveChan chan Message) {
 			time.Sleep((4 * time.Second))
 		}
 		if msg.SenderIP != GetLocalIP() {
-			//fmt.Println("Receiving: ")
 			//printMessage(msg)
 			messageRecieveChan <- msg
 		}
 	}
 }
-
-//------------Heartbeat---------------------------------------------------------------------------------------------------------------
 
 func HeartbeatEventCheck(newElevatorChan chan string, deadElevatorChan chan string) {
 
@@ -122,42 +114,27 @@ func SendHeartBeat() {
 	}
 }
 
-//--------------Private------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-func printMessage(message Message) {
-	fmt.Println("This message is being sent from elevator with IP: ", message.SenderIP)
-	fmt.Println("MessageType: ", message.MessageType)
-	fmt.Println("Target IP: ", message.TargetIP)
-	fmt.Println("Active: ", message.Elevator.Active)
-	fmt.Println("Floor: ", message.Elevator.Floor)
-	fmt.Println("Direction: ", message.Elevator.Direction)
-	fmt.Println("FsmState: ", message.Elevator.FsmState)
-	fmt.Println("Internal Orders: ", message.Elevator.InternalOrders)
-	fmt.Println("External Up Orders: ", message.Elevator.ExternalUp)
-	fmt.Println("External down orders: ", message.Elevator.ExternalDown)
-	fmt.Println("Order: ", message.Order, "\n")
-}
-
 func getTransmitSocket(port int) *net.UDPConn {
 
-	serverAddress, err := net.ResolveUDPAddr("udp", fmt.Sprintf("129.241.187.255:%d", port))
-	if err != nil {
-		fmt.Println("There is an error in resolving server:", err)
+	serverAddress, error := net.ResolveUDPAddr("udp", fmt.Sprintf("129.241.187.255:%d", port))
+	if error != nil {
+		fmt.Println("error:", error)
 	}
 	transmitSocket, _ := net.DialUDP("udp", nil, serverAddress)
-	if err != nil {
-		fmt.Println("There is an error in dialing:", err)
+	if error != nil {
+		fmt.Println("error:", error)
 	}
 	return transmitSocket
 }
 
 func getListenSocket(port int) *net.UDPConn {
-	localAddress, err := net.ResolveUDPAddr("udp", ":"+strconv.Itoa(port))
-	if err != nil {
-		fmt.Println("There is an error in resolving local:", err)
+	localAddress, error := net.ResolveUDPAddr("udp", ":"+strconv.Itoa(port))
+	if error != nil {
+		fmt.Println("error:", error)
 	}
-	listenSocket, err := net.ListenUDP("udp", localAddress)
-	if err != nil {
-		fmt.Println("There is an error in listening:", err)
+	listenSocket, error := net.ListenUDP("udp", localAddress)
+	if error != nil {
+		fmt.Println("error:", error)
 	}
 	return listenSocket
 }
@@ -166,9 +143,9 @@ func udpRecieve(msg chan []byte, port int) {
 	for {
 		socket := getListenSocket(port)
 		buffer := make([]byte, 1024)
-		n, _, err := socket.ReadFromUDP(buffer)
-		if err != nil {
-			fmt.Println("error:", err)
+		n, _, error := socket.ReadFromUDP(buffer)
+		if error != nil {
+			fmt.Println("error:", error)
 		}
 		buffer = buffer[:n]
 		msg <- buffer
@@ -179,12 +156,27 @@ func udpRecieve(msg chan []byte, port int) {
 func udpSend(msg chan []byte, port int) {
 	for {
 		socket := getTransmitSocket(port)
-		temp := <-msg
+		buffer := <-msg
 		socket.SetWriteDeadline(time.Now().Add(10 * time.Second))
-		_, error := socket.Write(temp)
+		_, error := socket.Write(buffer)
 		if error != nil {
 			fmt.Println("error:", error)
 		}
 		socket.Close()
 	}
 }
+
+//Makes printing of messages easy, if needed.  
+/*func printMessage(message Message) {
+	fmt.Println("This message is being sent from elevator with IP: ", message.SenderIP)
+	fmt.Println("MessageType: ", message.MessageType)
+	fmt.Println("Target IP: ", message.TargetIP)
+	fmt.Println("Active: ", message.Elevator.Active)
+	fmt.Println("Floor: ", message.Elevator.Floor)
+	fmt.Println("Direction: ", message.Elevator.Direction)
+	fmt.Println("NewlyInit: ", message.Elevator.NewlyInit)
+	fmt.Println("Internal Orders: ", message.Elevator.InternalOrders)
+	fmt.Println("External Up Orders: ", message.Elevator.ExternalUp)
+	fmt.Println("External down orders: ", message.Elevator.ExternalDown)
+	fmt.Println("Order: ", message.Order, "\n")
+}*/
