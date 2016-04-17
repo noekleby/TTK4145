@@ -21,6 +21,7 @@ const (
 	IDLE = iota
 	ELEVATING
 	DOOR_OPEN
+	LocalIP = "129.241.187.152"
 )
 
 var Elevators = map[string]*Elevator{}

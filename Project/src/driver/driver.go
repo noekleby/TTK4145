@@ -27,7 +27,7 @@ func Init() bool {
 	init_success := ioInit()
 
 	if init_success {
-		Elevators[GetLocalIP()] = &Elevator{true, 0, -1, IDLE, true, [4]bool{false, false, false, false}, [4]bool{false, false, false, false}, [4]bool{false, false, false, false}}
+		Elevators[LocalIP] = &Elevator{true, 0, -1, IDLE, true, [4]bool{false, false, false, false}, [4]bool{false, false, false, false}, [4]bool{false, false, false, false}}
 		StopElevate()
 		ElevateBottomFloor()
 		fmt.Println("I'm currently initializing elevator and hardware")
@@ -46,7 +46,7 @@ func Init() bool {
 }
 
 func StatusUpdate(){
-	newMsg := Message{"Status update", GetLocalIP(), "", *(Elevators[GetLocalIP()]), Order{-1,-1,""}}
+	newMsg := Message{"Status update", LocalIP, "", *(Elevators[LocalIP]), Order{-1,-1,""}}
 		BroadcastMessage(newMsg)
 }
 

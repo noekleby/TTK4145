@@ -11,7 +11,6 @@ import (
 
 
 func GetLocalIP() string {
-
 	addrs, error := net.InterfaceAddrs()
 	if error != nil {
 		fmt.Println("error:", error)
@@ -74,26 +73,30 @@ func HeartbeatEventCheck(newElevatorChan chan string, deadElevatorChan chan stri
 	go udpRecieve(receive, HeartBeatPort)
 
 	for {
-		otherBeatBs := <-receive
-		otherBeat := Heartbeat{}
-		error := json.Unmarshal(otherBeatBs, &otherBeat)
-		if error != nil {
-			fmt.Println("error:", error)
-		}
-		_, exist := heartbeats[otherBeat.Id]
-		if exist {
-			heartbeats[otherBeat.Id] = &otherBeat.Time
-		} else {
-			newElevatorChan <- otherBeat.Id
-			heartbeats[otherBeat.Id] = &otherBeat.Time
-		}
-		for i, t := range heartbeats {
-			dur := time.Since(*t)
-			if dur.Seconds() > 1 {
-				fmt.Println("Warning:", dur)
-				deadElevatorChan <- i
-				delete(heartbeats, i)
+		if GetLocalIP() != "" {
+			otherBeatBuffer := <-receive
+			otherBeat := Heartbeat{}
+			error := json.Unmarshal(otherBeatBuffer, &otherBeat)
+			if error != nil {
+				fmt.Println("error:", error)
 			}
+			_, exist := heartbeats[otherBeat.Id]
+			if exist {
+				heartbeats[otherBeat.Id] = &otherBeat.Time
+			} else {
+				newElevatorChan <- otherBeat.Id
+				heartbeats[otherBeat.Id] = &otherBeat.Time
+			}
+			for i, t := range heartbeats {
+				dur := time.Since(*t)
+				if dur.Seconds() > 1 {
+					fmt.Println("Warning:", dur)
+					deadElevatorChan <- i
+					delete(heartbeats, i)
+				}
+			}
+		} else {
+		deadElevatorChan <- LocalIP
 		}
 	}
 }
@@ -104,12 +107,12 @@ func SendHeartBeat() {
 
 	for {
 		myBeat := Heartbeat{GetLocalIP(), time.Now()}
-		myBeatBs, error := json.Marshal(myBeat)
+		myBeatBuffer, error := json.Marshal(myBeat)
 
 		if error != nil {
 			fmt.Println("error:", error)
 		}
-		send <- myBeatBs
+		send <- myBeatBuffer
 		time.Sleep(100 * time.Millisecond)
 	}
 }
@@ -157,10 +160,12 @@ func udpSend(msg chan []byte, port int) {
 	for {
 		socket := getTransmitSocket(port)
 		buffer := <-msg
-		socket.SetWriteDeadline(time.Now().Add(10 * time.Second))
-		_, error := socket.Write(buffer)
-		if error != nil {
-			fmt.Println("error:", error)
+		if Elevators[LocalIP].Active == true {
+			socket.SetWriteDeadline(time.Now().Add(10 * time.Second))
+			_, error := socket.Write(buffer)
+			if error != nil {
+				fmt.Println("error:", error)
+			}
 		}
 		socket.Close()
 	}

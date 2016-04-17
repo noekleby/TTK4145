@@ -9,10 +9,10 @@ import (
 
 
 func ShouldStop(floor, direction int) bool {
-	if Elevators[GetLocalIP()].InternalOrders[floor] == true {
+	if Elevators[LocalIP].InternalOrders[floor] == true {
 		return true
 	} else if direction == 1 {
-		if Elevators[GetLocalIP()].ExternalUp[floor] == true || floor == N_FLOORS-1 {
+		if Elevators[LocalIP].ExternalUp[floor] == true || floor == N_FLOORS-1 {
 			return true
 		} else if queueDirectionUp(floor) {
 			return false
@@ -20,7 +20,7 @@ func ShouldStop(floor, direction int) bool {
 			return true
 		}
 	} else if direction == -1 {
-		if Elevators[GetLocalIP()].ExternalDown[floor] == true || floor == 0 {
+		if Elevators[LocalIP].ExternalDown[floor] == true || floor == 0 {
 			return true
 		} else if queueDirectionDown(floor) {
 			return false
@@ -39,7 +39,7 @@ func NextDirection(direction, floor int) int {
 	} else if direction == 1 {
 		if queueDirectionUp(floor) {
 			return 1
-		} else if Elevators[GetLocalIP()].ExternalDown[floor]{
+		} else if Elevators[LocalIP].ExternalDown[floor]{
 			return 0 
 		} else if queueDirectionDown(floor) {
 			return -1
@@ -47,7 +47,7 @@ func NextDirection(direction, floor int) int {
 	} else if direction == -1 {
 		if queueDirectionDown(floor) {
 			return -1
-		} else if Elevators[GetLocalIP()].ExternalUp[floor]{
+		} else if Elevators[LocalIP].ExternalUp[floor]{
 			return 0
 		}else if queueDirectionUp(floor) {
 			return 1
@@ -60,47 +60,47 @@ func RemoveLocalOrder(floor int, direction int, lightEventChan chan int) {
 	order := Order{-1, -1, ""}
 
 	if direction == 1 && driver.GetLampSignal(UP, floor) == 1 {
-		Elevators[GetLocalIP()].ExternalUp[floor] = false
-		Elevators[GetLocalIP()].InternalOrders[floor] = false
+		Elevators[LocalIP].ExternalUp[floor] = false
+		Elevators[LocalIP].InternalOrders[floor] = false
 
-		newMsg := Message{"Remove order up", GetLocalIP(), "", *(Elevators[GetLocalIP()]), order}
+		newMsg := Message{"Remove order up", LocalIP, "", *(Elevators[LocalIP]), order}
 		BroadcastMessage(newMsg)
 		lightEventChan <- 1
 
 	} else if direction == 1 && driver.GetLampSignal(DOWN, floor) == 1 {
-		Elevators[GetLocalIP()].ExternalDown[floor] = false
-		Elevators[GetLocalIP()].InternalOrders[floor] = false
+		Elevators[LocalIP].ExternalDown[floor] = false
+		Elevators[LocalIP].InternalOrders[floor] = false
 		
-		newMsg := Message{"Remove order down", GetLocalIP(), "", *(Elevators[GetLocalIP()]), order}
+		newMsg := Message{"Remove order down", LocalIP, "", *(Elevators[LocalIP]), order}
 		BroadcastMessage(newMsg)
 		lightEventChan <- 1
 
 	} else if direction == -1 && driver.GetLampSignal(DOWN, floor) == 1 {
-		Elevators[GetLocalIP()].ExternalDown[floor] = false
-		Elevators[GetLocalIP()].InternalOrders[floor] = false
+		Elevators[LocalIP].ExternalDown[floor] = false
+		Elevators[LocalIP].InternalOrders[floor] = false
 
-		newMsg := Message{"Remove order down", GetLocalIP(), "", *(Elevators[GetLocalIP()]), order}
+		newMsg := Message{"Remove order down",LocalIP, "", *(Elevators[LocalIP]), order}
 		BroadcastMessage(newMsg)
 		lightEventChan <- 1
 
 	} else if direction == -1 && driver.GetLampSignal(UP, floor) == 1 {
-		Elevators[GetLocalIP()].ExternalUp[floor] = false
-		Elevators[GetLocalIP()].InternalOrders[floor] = false
+		Elevators[LocalIP].ExternalUp[floor] = false
+		Elevators[LocalIP].InternalOrders[floor] = false
 
-		newMsg := Message{"Remove order up", GetLocalIP(), "", *(Elevators[GetLocalIP()]), order}
+		newMsg := Message{"Remove order up", LocalIP, "", *(Elevators[LocalIP]), order}
 		BroadcastMessage(newMsg)
 		lightEventChan <- 1
 
 	} else {
-		Elevators[GetLocalIP()].ExternalDown[floor] = false
-		Elevators[GetLocalIP()].InternalOrders[floor] = false
-		Elevators[GetLocalIP()].ExternalUp[floor] = false
+		Elevators[LocalIP].ExternalDown[floor] = false
+		Elevators[LocalIP].InternalOrders[floor] = false
+		Elevators[LocalIP].ExternalUp[floor] = false
 
 		if floor == 0 {
-			newMsg := Message{"Remove order up", GetLocalIP(), "", *(Elevators[GetLocalIP()]), order}
+			newMsg := Message{"Remove order up", LocalIP, "", *(Elevators[LocalIP]), order}
 			BroadcastMessage(newMsg)
 		} else if floor == 3 {
-			newMsg := Message{"Remove order down", GetLocalIP(), "", *(Elevators[GetLocalIP()]), order}
+			newMsg := Message{"Remove order down", LocalIP, "", *(Elevators[LocalIP]), order}
 			BroadcastMessage(newMsg)
 		}
 		lightEventChan <- 1
@@ -117,22 +117,22 @@ func AddLocalOrder(order Order, lightEventChan chan int) {
 
 	case UP:
 		Elevators[cheapestElevator].ExternalUp[order.Floor] = true
-		if order.FromIP != GetLocalIP() {
-			newMsg := Message{"Add order", GetLocalIP(), cheapestElevator, *(Elevators[GetLocalIP()]), order}
+		if order.FromIP != LocalIP {
+			newMsg := Message{"Add order", LocalIP, cheapestElevator, *(Elevators[LocalIP]), order}
 			BroadcastMessage(newMsg)
 		}
 		lightEventChan <- 1
 
 	case DOWN:
 		Elevators[cheapestElevator].ExternalDown[order.Floor] = true
-		if order.FromIP != GetLocalIP() {
-			newMsg := Message{"Add order", GetLocalIP(), cheapestElevator, *(Elevators[GetLocalIP()]), order}
+		if order.FromIP != LocalIP {
+			newMsg := Message{"Add order", LocalIP, cheapestElevator, *(Elevators[LocalIP]), order}
 			BroadcastMessage(newMsg)
 		}
 		lightEventChan <- 1
 
 	case COMMAND:
-		Elevators[GetLocalIP()].InternalOrders[order.Floor] = true
+		Elevators[LocalIP].InternalOrders[order.Floor] = true
 		lightEventChan <- 1
 	}
 }
@@ -142,17 +142,17 @@ func AddLocalOrder(order Order, lightEventChan chan int) {
 func EmptyQueue() bool {
 	check := true
 	for floor := 0; floor < N_FLOORS; floor++ {
-		if Elevators[GetLocalIP()].ExternalUp[floor] == true || Elevators[GetLocalIP()].ExternalDown[floor] == true || Elevators[GetLocalIP()].InternalOrders[floor] == true {
+		if Elevators[LocalIP].ExternalUp[floor] == true || Elevators[LocalIP].ExternalDown[floor] == true || Elevators[LocalIP].InternalOrders[floor] == true {
 			check = false
 		}
 	}
 	return check
 }
-//-----------------Private functions ------------------------------------------------------//
+
 
 func queueDirectionUp(floor int) bool {
 	for f := floor + 1; f < N_FLOORS; f++ {
-		if Elevators[GetLocalIP()].InternalOrders[f] == true || Elevators[GetLocalIP()].ExternalUp[f] == true || Elevators[GetLocalIP()].ExternalDown[f] == true {
+		if Elevators[LocalIP].InternalOrders[f] == true || Elevators[LocalIP].ExternalUp[f] == true || Elevators[LocalIP].ExternalDown[f] == true {
 			return true
 		}
 	}
@@ -161,7 +161,7 @@ func queueDirectionUp(floor int) bool {
 
 func queueDirectionDown(floor int) bool {
 	for f := floor - 1; f > -1; f-- {
-		if Elevators[GetLocalIP()].InternalOrders[f] == true || Elevators[GetLocalIP()].ExternalUp[f] == true || Elevators[GetLocalIP()].ExternalDown[f] == true {
+		if Elevators[LocalIP].InternalOrders[f] == true || Elevators[LocalIP].ExternalUp[f] == true || Elevators[LocalIP].ExternalDown[f] == true {
 			return true
 		}
 	}

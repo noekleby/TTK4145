@@ -3,18 +3,18 @@ package fsm
 import (
 	. "../definitions"
 	"../driver"
-	. "../network"
+	//. "../network"
 	"fmt"
 	"time"
 )
 
 func GoToIDLE() {
 	driver.StopElevate()
-	Elevators[GetLocalIP()].Direction = 0
+	Elevators[LocalIP].Direction = 0
 }
 
 func GoToElevating(direction int) {
-	Elevators[GetLocalIP()].Direction = direction
+	Elevators[LocalIP].Direction = direction
 	if direction == 1 {
 		driver.ElevateUp()
 	} else if direction == -1 {
