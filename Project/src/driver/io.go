@@ -7,8 +7,12 @@ package driver
 */
 import "C"
 
-func ioInit() int {
-	return int(C.io_init())
+func ioInit() bool {
+	if int(C.io_init()) == 1 {
+		return true
+	} else{
+		return false
+	}
 }
 
 func ioSetBit(channel int) {
